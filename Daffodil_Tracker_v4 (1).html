@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daffodil Construction Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F5F4F1;--bg2:#FFFFFF;--bg3:#EFEFEB;
+  --text:#1C1B18;--text2:#6A6860;--text3:#A09D97;
+  --border:#E2E0DA;--border2:#CCCAC3;
+  --blue:#2563EB;--blue-l:#EFF4FF;--blue-d:#1D4ED8;
+  --green:#059669;--green-l:#ECFDF5;
+  --amber:#D97706;--amber-l:#FFFBEB;
+  --red:#DC2626;--red-l:#FEF2F2;
+  --purple:#7C3AED;--purple-l:#F5F3FF;
+  --orange:#EA580C;--orange-l:#FFF7ED;
+  --r:8px;--rl:12px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;color:var(--text);background:var(--bg);min-height:100vh;overflow:hidden}
+.screen{position:fixed;inset:0;z-index:10;display:none}
+.screen.active{display:flex}
+/* LOGIN */
+#s-login{background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:16px;overflow-y:auto;padding:20px 0}
+.brand h1{font-size:24px;font-weight:700;letter-spacing:-0.5px;text-align:center}
+.brand h1 span{color:var(--blue)}
+.brand p{font-size:12px;color:var(--text2);margin-top:3px;text-align:center}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:20px;width:100%;max-width:400px}
+.card h2{font-size:15px;font-weight:600;margin-bottom:14px}
+.f{margin-bottom:12px}
+.f label{display:block;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.f input,.f select,.f textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;color:var(--text);background:var(--bg2);font-family:inherit}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--blue)}
+/* APP */
+#s-app{flex-direction:column;height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;flex-shrink:0;gap:8px}
+.logo{font-size:13px;font-weight:700;letter-spacing:-0.5px;white-space:nowrap}
+.logo span{color:var(--blue)}
+.tnav{display:flex;gap:1px;overflow-x:auto;flex:1}
+.tnav::-webkit-scrollbar{display:none}
+.tnav button{background:none;border:none;padding:5px 9px;cursor:pointer;font-size:11px;color:var(--text2);border-radius:var(--r);font-weight:500;white-space:nowrap}
+.tnav button.on{color:var(--text);background:var(--bg3);font-weight:600}
+.tnav button:hover:not(.on){background:var(--bg)}
+.topright{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.nbtn{position:relative;background:none;border:none;cursor:pointer;font-size:17px;padding:3px}
+.nbadge{position:absolute;top:0;right:0;background:var(--red);color:#fff;border-radius:50%;width:13px;height:13px;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.upill{display:flex;align-items:center;gap:5px;padding:3px 8px;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:11px;color:var(--text2)}
+.upill:hover{background:var(--bg)}
+.av{width:20px;height:20px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.body{display:flex;flex:1;overflow:hidden}
+/* SIDEBAR */
+.sidebar{width:180px;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;padding:4px 0}
+.sg{padding:5px 10px 3px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px}
+.si{padding:6px 10px;cursor:pointer;font-size:12px;color:var(--text2);display:flex;align-items:center;justify-content:space-between;border-left:2px solid transparent;gap:4px}
+.si:hover{background:var(--bg)}
+.si.on{color:var(--text);font-weight:600;border-left-color:var(--blue);background:var(--bg3)}
+.sbadge{font-size:10px;padding:1px 5px;border-radius:3px;font-weight:600}
+.fl-row{padding:3px 10px 3px 22px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--text2);border-left:2px solid var(--border)}
+/* CONTENT */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px}
+/* TABLE */
+.tw{overflow-x:auto;border:1px solid var(--border);border-radius:var(--rl);background:var(--bg2);max-width:100%}
+.tw::-webkit-scrollbar{height:6px}
+.tw::-webkit-scrollbar-track{background:var(--bg3)}
+.tw::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+table{width:max-content;min-width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:6px 8px;font-size:10px;font-weight:700;color:var(--text2);background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:0.3px;position:sticky;top:0;z-index:1}
+th.sticky-col,td.sticky-col{position:sticky;left:0;z-index:2;background:var(--bg3)}
+td.sticky-col{background:var(--bg2)}
+tr:hover td.sticky-col{background:#FAFAF8}
+td{padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFAF8}
+.row-jodi td{background:#FAF5FF!important}
+.row-hold td{background:#FFFBEB!important}
+.row-raw td{background:#EFF4FF!important}
+.row-frozen td{background:#F9FAFB!important;opacity:0.65}
+/* TAGS */
+.tag{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700}
+.t-jodi{background:#F3E8FF;color:#6D28D9;border:1px solid #DDD6FE}
+.t-hold{background:#FEF3C7;color:#92400E;border:1px solid #FDE68A}
+.t-raw{background:#DBEAFE;color:#1E40AF;border:1px solid #BFDBFE}
+.t-done{background:#D1FAE5;color:#065F46;border:1px solid #A7F3D0}
+.t-ready{background:#EFF4FF;color:#1D4ED8;border:1px solid #BFDBFE}
+.t-block{background:#FEF3C7;color:#92400E;border:1px solid #FDE68A}
+.t-snag{background:#FFF7ED;color:#C2410C;border:1px solid #FED7AA}
+.t-desn{background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7}
+.t-pend{background:#F3F4F6;color:#374151;border:1px solid #E5E7EB}
+.t-frozen{background:#F3F4F6;color:#9CA3AF;border:1px dashed #D1D5DB}
+.t-normal{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+/* INPUTS */
+input[type=date]{border:1px solid var(--border2);border-radius:var(--r);padding:3px 5px;font-size:11px;background:var(--bg2);color:var(--text);width:108px}
+input[type=date]:focus{outline:none;border-color:var(--blue)}
+input[type=date]:disabled{opacity:0.45;cursor:not-allowed}
+.sc{display:flex;align-items:center;gap:3px}
+.snag-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.snag-btn{background:none;border:none;cursor:pointer;font-size:13px;padding:1px 2px;border-radius:3px;opacity:0.45;transition:opacity 0.1s}
+.snag-btn:hover{opacity:1;background:var(--orange-l)}
+.snag-btn.frozen-snag{opacity:0.2;cursor:not-allowed;pointer-events:none}
+/* BUTTONS */
+.btn{padding:6px 11px;border:1px solid var(--border2);border-radius:var(--r);cursor:pointer;font-size:12px;background:var(--bg2);color:var(--text);font-weight:500;font-family:inherit}
+.btn:hover{background:var(--bg)}
+.bp{background:var(--blue);color:#fff;border-color:var(--blue)}
+.bp:hover{background:var(--blue-d)}
+.bd{background:var(--red-l);color:var(--red);border-color:#FECACA}
+.bd:hover{background:#FEE2E2}
+.bg{background:var(--green-l);color:var(--green);border-color:#A7F3D0}
+.bo{background:var(--orange-l);color:var(--orange);border-color:#FED7AA}
+.bfull{width:100%;padding:9px;font-size:13px}
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg2);border-radius:var(--rl);border:1px solid var(--border);padding:18px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto}
+.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.mh h2{font-size:14px;font-weight:600}
+.xbtn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1;padding:0 2px}
+/* METRICS */
+.mg{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:7px;margin-bottom:11px}
+.mc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:8px 11px}
+.ml{font-size:10px;color:var(--text2);margin-bottom:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px}
+.mv{font-size:19px;font-weight:700;letter-spacing:-0.5px}
+.mv.g{color:var(--green)}.mv.a{color:var(--amber)}.mv.r{color:var(--red)}.mv.b{color:var(--blue)}.mv.p{color:var(--purple)}.mv.o{color:var(--orange)}
+/* PBAR */
+.pbar{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;display:inline-block}
+.pfill{height:100%;border-radius:3px}
+/* STAGE TOTALS BAR */
+.stage-totals{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r)}
+.stot{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px}
+.stot-label{font-size:9px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;text-align:center}
+.stot-val{font-size:12px;font-weight:700}
+.stot-bar{width:100%;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.stot-fill{height:100%;border-radius:2px}
+/* NOTIF */
+.np{position:fixed;top:46px;right:8px;width:300px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:150;display:none;max-height:380px;overflow-y:auto}
+.np.open{display:block}
+.np-h{padding:9px 12px;font-size:12px;font-weight:700;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.np-item{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer}
+.np-item:hover{background:var(--bg)}
+.np-item.unread{background:var(--blue-l)}
+.np-item:last-child{border-bottom:none}
+.np-time{font-size:10px;color:var(--text3);margin-top:2px}
+/* PHOTOS */
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px;margin-top:8px}
+.photo-thumb{position:relative;border-radius:var(--r);overflow:hidden;aspect-ratio:1;border:1px solid var(--border)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.photo-caption{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:2px 4px}
+/* CONFIG */
+.cfg-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:12px 14px;margin-bottom:9px}
+.cfg-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.trade-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+.spill{padding:2px 6px;border-radius:4px;font-size:10px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);display:inline-block;margin:2px}
+.link-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;display:flex;align-items:center;gap:6px;margin-top:5px}
+.link-url{font-size:11px;color:var(--blue);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace}
+.copy-btn{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:3px 7px;font-size:10px;cursor:pointer}
+.copy-btn:hover{background:var(--blue-l)}
+/* UNIT MASTER */
+.um-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:5px;margin-bottom:14px}
+.um-cell{border-radius:var(--r);padding:6px 4px;text-align:center;border:1px solid var(--border);cursor:default;font-size:11px;font-weight:600}
+.um-normal{background:var(--bg2);color:var(--text2)}
+.um-jodi{background:#F3E8FF;color:#6D28D9;border-color:#DDD6FE}
+.um-hold{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
+.um-raw{background:#DBEAFE;color:#1E40AF;border-color:#BFDBFE}
+.um-frozen{background:#F3F4F6;color:#9CA3AF;border-style:dashed}
+.um-refuge{background:#F9FAFB;color:#D1D5DB;border-style:dashed}
+.um-label{font-size:9px;font-weight:500;margin-top:2px;opacity:0.8}
+/* FLAT SELECTOR */
+.flat-sel-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+.fsq{width:100%;aspect-ratio:1;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:10px;font-weight:600;background:var(--bg2);color:var(--text2);display:flex;align-items:center;justify-content:center}
+.fsq:hover{border-color:var(--blue);color:var(--blue)}
+.fsq.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
+.fsq.jodi-p{background:var(--purple-l);color:var(--purple);border-color:#DDD6FE}
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}
+.leg{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)}
+.leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+/* USER */
+.user-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.user-row:last-child{border-bottom:none}
+.ustatus{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700}
+.u-pend{background:#FEF3C7;color:#92400E}.u-appr{background:#D1FAE5;color:#065F46}.u-rej{background:#FEE2E2;color:#991B1B}
+/* LOG */
+.log-item{padding:8px 10px;border-bottom:1px solid var(--border);font-size:11px}
+.log-item:last-child{border-bottom:none}
+.log-who{font-weight:600;color:var(--text)}
+.log-time{color:var(--text3);font-size:10px}
+.log-action{color:var(--text2);margin-top:2px}
+/* MS-DROPDOWN */
+.ms-dropdown{border:1px solid var(--border);border-radius:var(--r);background:var(--bg2);padding:4px;max-height:200px;overflow-y:auto}
+.ms-option{padding:6px 10px;cursor:pointer;font-size:12px;border-radius:var(--r)}
+.ms-option:hover{background:var(--bg3)}
+.ms-option.sel{background:var(--blue-l);color:var(--blue-d);font-weight:600}
+/* SLAB */
+.slab-table input[type=text]{width:120px;padding:3px 6px;border:1px solid var(--border2);border-radius:var(--r);font-size:11px}
+.slab-days{font-weight:700;font-size:11px;padding:2px 7px;border-radius:4px}
+/* MOBILE */
+@media(max-width:640px){
+  .sidebar{display:none;position:fixed;left:0;top:46px;bottom:0;z-index:50;box-shadow:4px 0 16px rgba(0,0,0,0.15)}
+  .sidebar.mob-open{display:block}
+  .mob-overlay{display:none;position:fixed;inset:0;top:46px;background:rgba(0,0,0,0.35);z-index:49}
+  .mob-overlay.open{display:block}
+  .content{padding:8px}
+  .topbar{padding:0 8px;gap:4px}
+  .logo{font-size:12px}
+  .tnav button{padding:4px 7px;font-size:10px}
+  .mg{grid-template-columns:repeat(3,1fr)}
+  .modal{padding:14px;margin:8px}
+  .stage-totals{gap:4px}
+  .stot{min-width:65px}
+  #mob-menu-btn{display:flex!important}
+  input[type=date]{width:100px}
+}
+@media(min-width:641px){
+  #mob-menu-btn{display:none!important}
+  .mob-overlay{display:none!important}
+}position:fixed;bottom:14px;right:14px;background:#1C1B18;color:#fff;border-radius:var(--r);padding:7px 13px;font-size:12px;z-index:999;display:none;pointer-events:none;font-weight:500}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="s-login" class="screen active">
+  <div class="brand">
+    <h1>Daffodil <span>Tracker</span></h1>
+    <p>Construction Progress — Daffodil 1</p>
+  </div>
+  <div class="card">
+    <h2>Quick Access (Demo)</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px">
+      <button class="btn bp" onclick="demoLogin('admin')">👑 Admin</button>
+      <button class="btn" style="background:#059669;color:#fff;border-color:#059669" onclick="demoLogin('manager')">🏗 Site Manager</button>
+      <button class="btn" style="background:#7C3AED;color:#fff;border-color:#7C3AED" onclick="demoLogin('supervisor')">👷 Supervisor</button>
+      <button class="btn" style="background:#EA580C;color:#fff;border-color:#EA580C" onclick="demoLogin('contractor')">🔧 Contractor</button>
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--text3);margin-bottom:12px">— or join via invite link —</div>
+    <div class="f"><label>Full Name *</label><input type="text" id="inp-name" placeholder="Your full name"></div>
+    <div class="f"><label>Mobile Number *</label><input type="tel" id="inp-mobile" placeholder="10-digit mobile" maxlength="15"></div>
+    <button class="btn bp bfull" onclick="joinViaLink()">Join →</button>
+  </div>
+</div>
+
+<!-- PENDING -->
+<div id="s-pending" class="screen" style="background:var(--bg);align-items:center;justify-content:center">
+  <div class="card" style="text-align:center">
+    <div style="font-size:36px;margin-bottom:10px">⏳</div>
+    <h2 style="margin-bottom:6px">Awaiting Approval</h2>
+    <p style="color:var(--text2);font-size:12px;margin-bottom:14px">Admin will approve your access shortly.</p>
+    <div style="font-size:11px;color:var(--text3)" id="pending-info"></div>
+    <button class="btn" style="margin-top:14px" onclick="logout()">← Back</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="s-app" class="screen">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+      <button id="mob-menu-btn" onclick="toggleMobMenu()" style="display:none;background:none;border:none;font-size:20px;cursor:pointer;padding:2px 4px;flex-shrink:0">☰</button>
+      <div class="logo">Daffodil <span>Tracker</span></div>
+      <div class="tnav" id="tnav"></div>
+    </div>
+    <div class="topright">
+      <select id="trade-sel" onchange="onTradeChange(this.value)" style="font-size:11px;padding:3px 6px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg2)"></select>
+      <button class="btn" style="font-size:10px;padding:3px 7px" onclick="exportCSV()">⬇ Export</button>
+      <button class="nbtn" onclick="toggleNotif()">🔔<span class="nbadge" id="nbadge" style="display:none">0</span></button>
+      <div class="upill" onclick="logout()"><div class="av" id="user-av">U</div><span id="user-lbl"></span><span style="font-size:9px">⏻</span></div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="mob-overlay" id="mob-overlay" onclick="toggleMobMenu()"></div>
+    <div class="sidebar" id="sidebar"></div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<div class="np" id="np">
+  <div class="np-h"><span>Notifications</span><button class="btn" style="padding:2px 7px;font-size:10px" onclick="markAllRead()">Mark read</button></div>
+  <div id="np-list"></div>
+</div>
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-inner"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+// ═══════════ DEFAULTS ═══════════
+const TCOLORS=['#2563EB','#059669','#D97706','#7C3AED','#EA580C','#0891B2','#65A30D','#DB2777'];
+const ROLES=['admin','manager','supervisor','contractor'];
+const RL={admin:'Admin',manager:'Site Manager',supervisor:'Supervisor',contractor:'Contractor'};
+const REFUGE=[408,808,1308,1808,2308]; // default, overrideable
+
+// ═══════════ STATE ═══════════
+let S={
+  // Building config
+  bldg:{floors:50,unitsPerFloor:10,groupSize:5},
+  trades:[{id:'civil',name:'Civil Work',color:'#2563EB',
+    stages:['DPC Work','Int Block Work','Int. Plaster','POP Dhahda','Main Door Fix','Bed Room Fix','Electric Pipe','POP Finish','Fire Fighting'],
+    depTrade:null,depStages:[],perFlat:false,order:0}],
+  // Slab tracker
+  slab:{
+    bhoomiPujan:'',excavation:'',workStart:'',customDates:[],  // [{label,date}]
+    parts:[
+      {id:'p1',name:'1st Part PG Side'},
+      {id:'p2',name:'2nd Part PG & Road'},
+      {id:'p3',name:'3rd Part Road No 2'}
+    ],
+    entries:[] // [{id,sr,label,targetDays,parts:[{partId,schedule,date,castBy}]}]
+  },
+  dates:{},perFlatDep:{},
+  jodiPairs:[],
+  holdFlats:{},   // fno->{tid->[stages]}, also stores log: holdLog:[{by,date,instruction,action}]
+  rawFlats:[],
+  rawStages:[],
+  frozenFlats:[],
+  flatLog:{},     // fno->[{action,by,byMob,date,instruction,ts}]
+  snags:{},
+  users:{},
+  notifications:[],
+  links:[],
+  activityLog:[]  // [{ts,who,whoMob,action,detail}]
+};
+let ME=null,curPage='progress',curTrade='civil',curFG=0;
+
+function loadS(){
+  try{const r=localStorage.getItem('daff_v6');if(r)S=JSON.parse(r);}catch(e){}
+  if(!S.bldg)S.bldg={floors:50,unitsPerFloor:10,groupSize:5};
+  if(!S.trades?.length)S.trades=[{id:'civil',name:'Civil Work',color:'#2563EB',stages:['DPC Work','Int Block Work','Int. Plaster','POP Dhahda','Main Door Fix','Bed Room Fix','Electric Pipe','POP Finish','Fire Fighting'],depTrade:null,depStages:[],perFlat:false,order:0}];
+  S.trades.forEach((t,i)=>{if(!t.depStages)t.depStages=t.depStage?[t.depStage]:[];if(t.order===undefined)t.order=i;});
+  if(!S.slab)S.slab={bhoomiPujan:'',excavation:'',workStart:'',customDates:[],parts:[{id:'p1',name:'1st Part PG Side'},{id:'p2',name:'2nd Part PG & Road'},{id:'p3',name:'3rd Part Road No 2'}],entries:[]};
+  ['dates','perFlatDep','holdFlats','snags','users','flatLog'].forEach(k=>{if(!S[k])S[k]={};});
+  ['jodiPairs','rawFlats','rawStages','frozenFlats','notifications','links','activityLog'].forEach(k=>{if(!Array.isArray(S[k]))S[k]=[];});
+  if(!Object.values(S.users).some(u=>u.role==='admin'))
+    S.users['9999999999']={name:'Admin',mobile:'9999999999',role:'admin',trades:[],status:'approved',joinedAt:Date.now()};
+  // Pre-populate slab entries from Excel data if empty
+  if(!S.slab.entries.length) seedSlabEntries();
+}
+function saveS(){try{localStorage.setItem('daff_v6',JSON.stringify(S));}catch(e){toast('Storage full!');}}
+
+function seedSlabEntries(){
+  const raw=[
+    {sr:1,label:'Raft Cast'},{sr:2,label:'Plinth Comp'},
+    {sr:3,label:'1st Slab (Basement Top)'},{sr:4,label:'2nd Slab (Ground)'},
+    {sr:5,label:'3rd Slab (FL A)'},{sr:6,label:'4th Slab (FL B)'},
+    {sr:7,label:'5th Slab (Still)'},{sr:8,label:'6th Slab (1st FL Top)'},
+    {sr:9,label:'7th Slab (2nd FL Top)'},{sr:10,label:'8th Slab (3rd FL Top)'},
+    {sr:11,label:'9th Slab (4th FL Top)'},{sr:12,label:'10th Slab (5th FL Top)'},
+    {sr:13,label:'11th Slab (6th FL Top)'},{sr:14,label:'12th Slab (7th FL Top)'},
+    {sr:15,label:'13th Slab (8th FL Top)'},{sr:16,label:'14th Slab (9th FL Top)'},
+    {sr:17,label:'15th Slab (10th FL Top)'},{sr:18,label:'16th Slab (11th FL Top)'},
+    {sr:19,label:'17th Slab (12th FL Top)'},{sr:20,label:'18th Slab (13th FL Top)'},
+    {sr:21,label:'19th Slab (14th FL Top)'},{sr:22,label:'20th Slab (15th FL Top)'},
+    {sr:23,label:'21st Slab (16th FL Top)'},{sr:24,label:'22nd Slab (17th FL Top)'},
+    {sr:25,label:'23rd Slab (18th FL Top)'},{sr:26,label:'24th Slab (19th FL Top)'},
+    {sr:27,label:'25th Slab (20th FL Top)'},{sr:28,label:'26th Slab (21st FL Top)'},
+    {sr:29,label:'27th Slab (22nd FL Top)'},{sr:30,label:'28th Slab (23rd FL Top)'},
+    {sr:31,label:'29th Slab (24th FL Top)'},{sr:32,label:'30th Slab (25th FL Top)'},
+    {sr:33,label:'31st Slab (26th FL Top)'},{sr:34,label:'32nd Slab (27th FL Top)'},
+    {sr:35,label:'33rd Slab (28th FL Top)'},{sr:36,label:'34th Slab (29th FL Top)'},
+    {sr:37,label:'35th Slab (30th FL Top)'},{sr:38,label:'36th Slab (31st FL Top)'},
+    {sr:39,label:'37th Slab (32nd FL Top)'},{sr:40,label:'38th Slab (33rd FL Top)'},
+    {sr:41,label:'39th Slab (34th FL Top)'},{sr:42,label:'40th Slab (35th FL Top)'},
+    {sr:43,label:'41st Slab (36th FL Top)'},{sr:44,label:'42nd Slab (37th FL Top)'},
+    {sr:45,label:'43rd Slab (38th FL Top)'},{sr:46,label:'44th Slab (39th FL Top)'},
+    {sr:47,label:'45th Slab (40th FL Top)'},{sr:48,label:'46th Slab (41st FL Top)'},
+    {sr:49,label:'47th Slab (42nd FL Top)'},{sr:50,label:'48th Slab (43rd FL Top)'},
+    {sr:51,label:'49th Slab (44th FL Top)'},{sr:52,label:'50th Slab (45th FL Top)'},
+    {sr:53,label:'51st Slab (46th FL Top)'},{sr:54,label:'52nd Slab (47th FL Top)'},
+    {sr:55,label:'53rd Slab (48th FL Top)'},{sr:56,label:'54th Slab (49th FL Top)'},
+    {sr:57,label:'55th Slab (Terrace FL)'},{sr:58,label:'LMR / OHT'}
+  ];
+  S.slab.entries=raw.map(r=>({id:'s'+r.sr,sr:r.sr,label:r.label,targetDays:'',
+    parts:S.slab.parts.map(p=>({partId:p.id,schedule:'',date:'',castBy:''}))}));
+}
+
+// ═══════════ BUILDING HELPERS ═══════════
+const getFloors=()=>S.bldg.floors||50;
+const getUnits=()=>S.bldg.unitsPerFloor||10;
+const getGroupSize=()=>S.bldg.groupSize||5;
+const getRefuge=()=>[408,808,1308,1808,2308];
+
+function buildFGS(){
+  const gs=getGroupSize(),fl=getFloors();
+  const fgs=[];
+  for(let f=1;f<=fl;f+=gs){
+    const end=Math.min(f+gs-1,fl);
+    const floors=[];for(let x=f;x<=end;x++)floors.push(x);
+    fgs.push({l:`Floors ${f}–${end}`,f:floors});
+  }
+  return fgs;
+}
+const floorFlats=fl=>{const a=[];for(let u=1;u<=getUnits();u++)a.push(fl*100+u);return a;};
+const allFlats=()=>{const a=[];for(let fl=1;fl<=getFloors();fl++)a.push(...floorFlats(fl));return a;};
+
+// ═══════════ HELPERS ═══════════
+const uid=()=>Math.random().toString(36).slice(2,9);
+const fmt=d=>{if(!d)return'—';return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});};
+const dk=(t,f,s)=>`${t}|${f}|${s}`;
+const getD=(t,f,s)=>S.dates[dk(t,f,s)]||'';
+function setD(t,f,s,v){
+  if(v)S.dates[dk(t,f,s)]=v;else delete S.dates[dk(t,f,s)];
+  addActivityLog(`Date entered: ${getTrade(t)?.name} / Flat ${f} / ${s} = ${v||'cleared'}`);
+  saveS();renderContent();
+}
+const getTrade=id=>S.trades.find(t=>t.id===id);
+const sortedTrades=()=>[...S.trades].sort((a,b)=>(a.order||0)-(b.order||0));
+
+// Jodi
+const jodiOf=fno=>{for(const p of S.jodiPairs){if(p.includes(fno))return p.find(x=>x!==fno);}return null;};
+const isJodi=fno=>S.jodiPairs.some(p=>p.includes(fno));
+const isRefuge=fno=>getRefuge().includes(fno);
+const isFrozen=fno=>S.frozenFlats.includes(fno);
+const isHold=(fno,tid=null)=>{
+  if(!S.holdFlats[fno])return false;
+  if(tid)return !!(S.holdFlats[fno][tid]?.stages?.length);
+  return Object.values(S.holdFlats[fno]).some(x=>x?.stages?.length>0);
+};
+const isRaw=fno=>S.rawFlats.includes(fno);
+
+function stageAllowed(tid,fno,stage){
+  if(isFrozen(fno))return false;
+  const hold=S.holdFlats[fno];
+  if(hold&&hold[tid]&&hold[tid].stages?.includes(stage))return false;
+  if(isRaw(fno)&&!S.rawStages.includes(stage))return false;
+  return true;
+}
+function isDepMet(trade,fno){
+  if(!trade.depTrade)return true;
+  const stages=trade.perFlat?(S.perFlatDep[`${trade.id}|${fno}`]||[]):trade.depStages;
+  if(!stages.length)return false;
+  return stages.every(s=>!!getD(trade.depTrade,fno,s));
+}
+const canEdit=tid=>{
+  if(!ME)return false;
+  if(ME.role==='admin'||ME.role==='manager')return true;
+  return ME.role==='supervisor'&&ME.trades?.includes(tid);
+};
+const canManage=()=>ME&&(ME.role==='admin'||ME.role==='manager');
+const canAdmin=()=>ME&&ME.role==='admin';
+const getSnags=(tid,fno,stage)=>Object.values(S.snags).filter(s=>s.tid===tid&&s.fno===fno&&s.stage===stage);
+const hasOpenSnag=(tid,fno,stage)=>getSnags(tid,fno,stage).some(s=>s.status==='open');
+const hasAnySnag=(tid,fno,stage)=>getSnags(tid,fno,stage).length>0;
+
+// Activity log
+function addActivityLog(action){
+  if(!ME)return;
+  S.activityLog.unshift({ts:Date.now(),who:ME.name,whoMob:ME.mobile,action});
+  if(S.activityLog.length>500)S.activityLog=S.activityLog.slice(0,500);
+}
+
+// Notifications
+function addNotif(to,msg,type='info'){
+  S.notifications.unshift({id:uid(),to,msg,type,read:[],createdAt:Date.now()});
+  saveS();updateNBadge();renderNPanel();
+}
+const myNotifs=()=>ME?S.notifications.filter(n=>n.to==='all'||n.to===ME.mobile):[];
+const unreadCt=()=>myNotifs().filter(n=>!n.read.includes(ME?.mobile)).length;
+function updateNBadge(){const c=unreadCt();const b=document.getElementById('nbadge');if(b){b.style.display=c>0?'flex':'none';b.textContent=c>9?'9+':c;}}
+
+// Progress
+function flatProgress(tid,fno){
+  const t=getTrade(tid);if(!t)return{done:0,total:0,pct:0};
+  let d=0,tot=0;
+  t.stages.forEach(s=>{if(!stageAllowed(tid,fno,s))return;tot++;if(getD(tid,fno,s))d++;});
+  return{done:d,total:tot,pct:tot>0?Math.round(d/tot*100):0};
+}
+
+// ═══════════ LOGIN ═══════════
+function demoLogin(role){
+  const mob={admin:'9999999999',manager:'8888888888',supervisor:'7777777777',contractor:'6666666666'}[role];
+  const name={admin:'Demo Admin',manager:'Demo Manager',supervisor:'Demo Supervisor',contractor:'Demo Contractor'}[role];
+  if(!S.users[mob])S.users[mob]={name,mobile:mob,role,trades:S.trades.map(t=>t.id),status:'approved',joinedAt:Date.now()};
+  else{S.users[mob].status='approved';S.users[mob].role=role;if(!S.users[mob].trades?.length)S.users[mob].trades=S.trades.map(t=>t.id);}
+  saveS();loginAs(S.users[mob]);
+}
+function joinViaLink(){
+  const name=document.getElementById('inp-name').value.trim();
+  const mob=document.getElementById('inp-mobile').value.replace(/\D/g,'');
+  if(!name){toast('Enter your name');return;}
+  if(mob.length<10){toast('Enter valid mobile number');return;}
+  const params=new URLSearchParams(location.search);
+  const linkId=params.get('link');
+  const lnk=linkId?S.links.find(l=>l.id===linkId):null;
+  if(!lnk&&!S.users[mob]){toast('No valid invite link. Contact admin.');return;}
+  if(!S.users[mob]){
+    const role=lnk?.role||'supervisor';
+    const trades=lnk?.tradeId?[lnk.tradeId]:[];
+    S.users[mob]={name,mobile:mob,role,trades,status:'pending',joinedAt:Date.now()};
+    saveS();
+    Object.values(S.users).filter(u=>u.role==='admin').forEach(a=>addNotif(a.mobile,`New user ${name} (${mob}) requesting access.`,'user_req'));
+    ME=S.users[mob];show('s-pending');document.getElementById('pending-info').textContent=`${name} · ${mob}`;
+  }else{
+    const u=S.users[mob];
+    if(u.status==='rejected'){toast('Access denied. Contact admin.');return;}
+    if(u.status==='pending'){ME=u;show('s-pending');document.getElementById('pending-info').textContent=`${u.name} · ${mob}`;return;}
+    loginAs(u);
+  }
+}
+function loginAs(u){ME=u;if(ME.trades?.length)curTrade=ME.trades[0];else if(S.trades.length)curTrade=S.trades[0].id;show('s-app');initApp();}
+function logout(){ME=null;show('s-login');}
+
+// ═══════════ APP INIT ═══════════
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function initApp(){
+  document.getElementById('user-av').textContent=ME.name.slice(0,2).toUpperCase();
+  document.getElementById('user-lbl').textContent=ME.name;
+  buildTNav();buildTradeSel();updateNBadge();renderSidebar();renderContent();
+}
+function buildTNav(){
+  const pages=[
+    {id:'progress',label:'Progress',r:['admin','manager','supervisor','contractor']},
+    {id:'overview',label:'Overview',r:['admin','manager']},
+    {id:'snagging',label:'Snagging',r:['admin','manager','supervisor','contractor']},
+    {id:'slab',label:'Slab Tracker',r:['admin','manager']},
+    {id:'unitmaster',label:'Unit Master',r:['admin','manager']},
+    {id:'actlog',label:'Activity Log',r:['admin']},
+    {id:'users',label:'Users',r:['admin']},
+    {id:'links',label:'Share Links',r:['admin','manager']},
+    {id:'config',label:'Configure',r:['admin','manager']},
+  ];
+  document.getElementById('tnav').innerHTML=pages.filter(p=>p.r.includes(ME.role)).map(p=>
+    `<button class="${p.id===curPage?'on':''}" onclick="setPage('${p.id}',this)">${p.label}</button>`
+  ).join('');
+}
+function buildTradeSel(){
+  const trades=canManage()?sortedTrades():sortedTrades().filter(t=>ME.trades?.includes(t.id));
+  document.getElementById('trade-sel').innerHTML=trades.map(t=>`<option value="${t.id}"${t.id===curTrade?' selected':''}>${t.name}</option>`).join('');
+}
+function onTradeChange(v){curTrade=v;renderSidebar();renderContent();}
+function setPage(p,btn){
+  curPage=p;
+  document.querySelectorAll('.tnav button').forEach(b=>b.classList.remove('on'));
+  btn?.classList.add('on');
+  renderSidebar();renderContent();
+}
+
+// ═══════════ SIDEBAR ═══════════
+function renderSidebar(){
+  const FGS=buildFGS();
+  const t=getTrade(curTrade);
+  let h='<div class="sg">Floor Groups</div>';
+  FGS.forEach((fg,i)=>{
+    let d=0,tot=0;
+    if(t)fg.f.forEach(fl=>floorFlats(fl).forEach(fno=>{
+      if(isRefuge(fno))return;
+      const p=flatProgress(t.id,fno);d+=p.done;tot+=p.total;
+    }));
+    const pct=tot>0?Math.round(d/tot*100):0;
+    const col=pct===100?'#059669':pct>60?'#16A34A':pct>30?'#D97706':'#9CA3AF';
+    const isOpen=i===curFG;
+    h+=`<div class="si${isOpen?' on':''}" onclick="curFG=${i};renderSidebar();renderContent()">
+      <span>${fg.l}</span><span class="sbadge" style="background:${col}18;color:${col}">${pct}%</span>
+    </div>`;
+    if(isOpen&&t){
+      fg.f.forEach(fl=>{
+        let fd=0,ft=0;
+        floorFlats(fl).forEach(fno=>{if(isRefuge(fno))return;const p=flatProgress(t.id,fno);fd+=p.done;ft+=p.total;});
+        const fpct=ft>0?Math.round(fd/ft*100):0;
+        const fc=fpct===100?'#059669':fpct>60?'#16A34A':fpct>30?'#D97706':'#9CA3AF';
+        h+=`<div class="fl-row"><span>Floor ${fl}</span><span style="font-size:10px;font-weight:700;color:${fc}">${fpct}%</span></div>`;
+      });
+    }
+  });
+  document.getElementById('sidebar').innerHTML=h;
+}
+
+// ═══════════ RENDER ROUTER ═══════════
+function renderContent(){
+  const c=document.getElementById('content');
+  if(curPage==='progress')renderProgress(c);
+  else if(curPage==='overview')renderOverview(c);
+  else if(curPage==='snagging')renderSnagging(c);
+  else if(curPage==='slab')renderSlab(c);
+  else if(curPage==='unitmaster')renderUnitMaster(c);
+  else if(curPage==='actlog')renderActivityLog(c);
+  else if(curPage==='users')renderUsers(c);
+  else if(curPage==='links')renderLinks(c);
+  else if(curPage==='config')renderConfig(c);
+}
+
+// ═══════════ PROGRESS ═══════════
+function renderProgress(c){
+  const FGS=buildFGS();
+  const trade=getTrade(curTrade);
+  if(!trade){c.innerHTML='<p style="padding:20px;color:var(--text2)">No trade selected.</p>';return;}
+  const fg=FGS[curFG]||FGS[0];
+  const editable=canEdit(curTrade);
+  const stageTotals={};
+  trade.stages.forEach(s=>{stageTotals[s]={done:0,total:0};});
+  let totD=0,totT=0,holdCt=0,rawCt=0,snagCt=0;
+  let rows='';
+
+  fg.f.forEach(fl=>{
+    floorFlats(fl).forEach(fno=>{
+      if(isRefuge(fno)){
+        rows+=`<tr class="row-frozen"><td class="sticky-col"><strong>${fno}</strong></td><td></td><td><span class="tag t-frozen" style="font-size:9px">Refuge</span></td><td colspan="${trade.stages.length+1}" style="color:var(--text3);font-size:11px">Excluded</td></tr>`;
+        return;
+      }
+      const dep=isDepMet(trade,fno);
+      const frozen=isFrozen(fno);
+      const hold=isHold(fno,trade.id);
+      const raw=isRaw(fno);
+      const jodi=isJodi(fno);
+      const jodiPair=jodiOf(fno);
+      let flatD=0,flatT=0;
+      let cells='';
+      trade.stages.forEach(s=>{
+        const allowed=stageAllowed(trade.id,fno,s);
+        const val=getD(trade.id,fno,s);
+        const openSnag=hasOpenSnag(trade.id,fno,s);
+        const anySnag=hasAnySnag(trade.id,fno,s);
+        snagCt+=openSnag?1:0;
+        if(allowed){flatT++;totT++;if(val){flatD++;totD++;stageTotals[s].done++;}stageTotals[s].total++;}
+        const locked=!editable||!allowed||(!dep&&!val);
+        const snagDot=anySnag?`<span class="snag-dot" style="background:${openSnag?'#EA580C':'#059669'}"></span>`:'';
+        const snagFrozen=!allowed||frozen;
+        if(!allowed){
+          const isHoldStage=S.holdFlats[fno]?.[trade.id]?.stages?.includes(s);
+          const isRawBlock=raw&&!S.rawStages.includes(s);
+          if(frozen)cells+=`<td><div class="sc" style="opacity:0.35"><input type="date" disabled style="border-style:dashed">🧊</div></td>`;
+          else if(isHoldStage)cells+=`<td><div class="sc" style="opacity:0.55"><input type="date" disabled style="background:#FEF3C7;border:1px dashed #FDE68A">🔒</div></td>`;
+          else if(isRawBlock)cells+=`<td><div class="sc" style="opacity:0.45"><input type="date" disabled style="background:#DBEAFE;border:1px dashed #93C5FD">🏗</div></td>`;
+          else cells+=`<td><div class="sc" style="opacity:0.4"><input type="date" disabled style="border-style:dashed">🔒</div></td>`;
+        }else{
+          cells+=`<td><div class="sc">${snagDot}<input type="date" value="${val||''}" ${locked?'disabled':''} onchange="setD('${trade.id}',${fno},'${s}',this.value)">
+            ${editable?`<button class="snag-btn${snagFrozen?' frozen-snag':''}" onclick="openSnagModal('${trade.id}',${fno},'${s}')" title="Snag">🚩</button>`:''}
+          </div></td>`;
+        }
+      });
+      if(hold)holdCt++;if(raw)rawCt++;
+      const all=flatT>0&&flatD===flatT;
+      const pct=flatT>0?Math.round(flatD/flatT*100):0;
+      const sc=frozen?'t-frozen':hold?'t-hold':raw?'t-raw':all?'t-done':!dep?'t-block':flatD>0?'t-pend':'t-ready';
+      const sl=frozen?'Frozen':hold?'Hold':raw?'RAW':all?'Done':!dep?'Blocked':flatD>0?pct+'%':'Ready';
+      const rowClass=frozen?'row-frozen':hold?'row-hold':raw?'row-raw':jodi?'row-jodi':'';
+      const manageBtns=canManage()?`<td><button class="btn" style="padding:2px 5px;font-size:10px" onclick="manageFlatModal(${fno},'${trade.id}')">⚙</button></td>`:'';
+      rows+=`<tr class="${rowClass}">
+        <td class="sticky-col"><strong>${fno}</strong>${jodi?`<div><span class="tag t-jodi" style="font-size:9px">JODI+${jodiPair}</span></div>`:''}</td>
+        <td style="font-size:11px;color:var(--text2)">${Math.floor(fno/100)}</td>
+        <td><span class="tag ${sc}">${sl}</span></td>
+        ${cells}${manageBtns}
+      </tr>`;
+    });
+  });
+
+  const stageTotalBar=`<div class="stage-totals">
+    <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;width:100%;margin-bottom:6px">Stage totals — ${fg.l}</div>
+    ${trade.stages.map(s=>{
+      const st=stageTotals[s];
+      const pct=st.total>0?Math.round(st.done/st.total*100):0;
+      const col=pct===100?'#059669':pct>60?'#16A34A':pct>30?'#D97706':'#DC2626';
+      return `<div class="stot">
+        <div class="stot-label">${s}</div>
+        <div class="stot-val" style="color:${col}">${st.total} / ${st.done} / ${st.total-st.done}</div>
+        <div style="font-size:9px;color:var(--text3);text-align:center">total · done · pending</div>
+        <div class="stot-bar"><div class="stot-fill" style="width:${pct}%;background:${col}"></div></div>
+      </div>`;
+    }).join('')}
+  </div>`;
+
+  const op=totT>0?Math.round(totD/totT*100):0;
+  const depBanner=trade.depTrade?`<div style="background:var(--blue-l);border:1px solid #BFDBFE;border-radius:var(--r);padding:7px 11px;font-size:12px;margin-bottom:9px;color:var(--blue-d)">
+    🔗 Depends on <strong>${getTrade(trade.depTrade)?.name||'?'}</strong> — triggers: ${trade.perFlat?'per flat':(trade.depStages||[]).join(', ')||'none set'}
+  </div>`:'';
+  const manTh=canManage()?'<th>⚙</th>':'';
+
+  c.innerHTML=`
+  <div class="mg">
+    <div class="mc"><div class="ml">Total</div><div class="mv b">${totT}</div></div>
+    <div class="mc"><div class="ml">Done</div><div class="mv g">${totD}</div></div>
+    <div class="mc"><div class="ml">Pending</div><div class="mv a">${totT-totD}</div></div>
+    <div class="mc"><div class="ml">Progress</div><div class="mv ${op>70?'g':op>30?'a':'r'}">${op}%</div></div>
+    <div class="mc"><div class="ml">Hold</div><div class="mv a">${holdCt}</div></div>
+    <div class="mc"><div class="ml">RAW</div><div class="mv b">${rawCt}</div></div>
+    <div class="mc"><div class="ml">Open Snags</div><div class="mv o">${snagCt}</div></div>
+  </div>
+  ${stageTotalBar}
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:#DBEAFE;border:1px solid #93C5FD"></div>RAW</div>
+    <div class="leg"><div class="leg-dot" style="background:#FEF3C7;border:1px solid #FDE68A"></div>Hold</div>
+    <div class="leg"><div class="leg-dot" style="background:#FAF5FF;border:1px solid #DDD6FE"></div>Jodi</div>
+    <div class="leg"><div class="leg-dot" style="background:#EA580C;border-radius:50%"></div>Snag open</div>
+    <div class="leg"><div class="leg-dot" style="background:#059669;border-radius:50%"></div>Desnagged</div>
+    <div class="leg">🔒=Hold &nbsp; 🏗=RAW N/A &nbsp; 🧊=Frozen</div>
+  </div>
+  ${depBanner}
+  <div class="tw"><table>
+    <thead><tr><th class="sticky-col">Flat</th><th>Floor</th><th>Status</th>${trade.stages.map(s=>`<th>${s}</th>`).join('')}${manTh}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+// ═══════════ FLAT STATE POPUP (hold/freeze/raw with log) ═══════════
+function flatStateChangePopup(fno, tid, action, currentVal, onConfirm){
+  // action: 'freeze'|'unfreeze'|'hold'|'unhold'|'raw'|'unraw'
+  const labels={freeze:'Freeze Flat',unfreeze:'Unfreeze Flat',hold:'Set Hold',unhold:'Remove Hold',raw:'Mark RAW',unraw:'Remove RAW'};
+  showModal(`
+    <div class="mh"><h2>${labels[action]} — Flat ${fno}</h2><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <div style="background:var(--amber-l);border:1px solid #FDE68A;border-radius:var(--r);padding:8px 11px;font-size:12px;color:#92400E">
+        📋 This action will be logged with date and instructions.
+      </div>
+      <div class="f"><label>Date of instruction *</label><input type="date" id="fsp-date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="f"><label>Instruction given by *</label><input type="text" id="fsp-by" value="${ME?.name||''}" placeholder="Name of person giving instruction"></div>
+      <div class="f"><label>Instructions / Reason</label><textarea id="fsp-inst" rows="2" style="font-size:12px" placeholder="Reason or notes..."></textarea></div>
+      <button class="btn bp bfull" onclick="confirmFlatStateChange(${fno},'${tid}','${action}')">Confirm</button>
+    </div>`);
+}
+
+function confirmFlatStateChange(fno, tid, action){
+  const date=document.getElementById('fsp-date').value;
+  const by=document.getElementById('fsp-by').value.trim();
+  const inst=document.getElementById('fsp-inst').value.trim();
+  if(!date||!by){toast('Date and name required');return;}
+  const logEntry={action,by,byMob:ME?.mobile,date,instruction:inst,ts:Date.now()};
+  if(!S.flatLog[fno])S.flatLog[fno]=[];
+  S.flatLog[fno].push(logEntry);
+  addActivityLog(`${action} — Flat ${fno} — by ${by} on ${date}${inst?' — '+inst:''}`);
+  addNotif('all',`Flat ${fno} ${action} by ${by} on ${date}${inst?' — '+inst:''}`, action);
+  if(action==='freeze'){if(!S.frozenFlats.includes(fno))S.frozenFlats.push(fno);}
+  else if(action==='unfreeze'){S.frozenFlats=S.frozenFlats.filter(x=>x!==fno);}
+  else if(action==='raw'){if(!S.rawFlats.includes(fno))S.rawFlats.push(fno);}
+  else if(action==='unraw'){S.rawFlats=S.rawFlats.filter(x=>x!==fno);}
+  saveS();closeModal();renderContent();renderSidebar();toast(`Flat ${fno} ${action} logged`);
+}
+
+function manageFlatModal(fno, tid){
+  const trade=getTrade(tid);
+  const heldStages=(S.holdFlats[fno]||{})[tid]?.stages||[];
+  const raw=isRaw(fno);const frozen=isFrozen(fno);
+  const logs=(S.flatLog[fno]||[]).slice(-5).reverse();
+  const logHtml=logs.length?logs.map(l=>`<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:11px">
+    <span style="font-weight:600">${l.action}</span> · <span style="color:var(--text2)">${l.by}</span> · <span style="color:var(--text3)">${l.date}</span>
+    ${l.instruction?`<div style="color:var(--text2);margin-top:1px">${l.instruction}</div>`:''}
+  </div>`).join(''):'<div style="font-size:11px;color:var(--text3)">No log entries.</div>';
+
+  showModal(`
+    <div class="mh"><h2>Manage Flat ${fno} — ${trade.name}</h2><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        ${!frozen?`<button class="btn bd" onclick="closeModal();flatStateChangePopup(${fno},'${tid}','freeze')">🧊 Freeze</button>`
+          :`<button class="btn bg" onclick="closeModal();flatStateChangePopup(${fno},'${tid}','unfreeze')">🧊 Unfreeze</button>`}
+        ${!raw?`<button class="btn bo" onclick="closeModal();flatStateChangePopup(${fno},'${tid}','raw')">🏗 Mark RAW</button>`
+          :`<button class="btn bg" onclick="closeModal();flatStateChangePopup(${fno},'${tid}','unraw')">🏗 Remove RAW</button>`}
+      </div>
+      <div>
+        <div style="font-weight:600;margin-bottom:7px;font-size:12px">🔒 Hold specific stages (${trade.name})</div>
+        <div style="background:var(--bg3);border-radius:var(--r);padding:9px 11px;margin-bottom:7px">
+          ${trade.stages.map(s=>`<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;cursor:pointer">
+            <input type="checkbox" value="${s}" ${heldStages.includes(s)?'checked':''} style="width:14px;height:14px">
+            <span>${s}</span>
+          </label>`).join('')}
+        </div>
+        <button class="btn bp" style="width:100%" onclick="saveHoldPrompt(${fno},'${tid}')">Save Hold Changes</button>
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:12px;margin-bottom:6px">📋 Recent Log (last 5)</div>
+        ${logHtml}
+      </div>
+    </div>`);
+}
+
+let _pendingHold={fno:null,tid:null,held:[]};
+function saveHoldPrompt(fno, tid){
+  const held=Array.from(document.querySelectorAll('#modal-inner input[type=checkbox][value]:checked')).map(c=>c.value);
+  const prev=(S.holdFlats[fno]||{})[tid]?.stages||[];
+  const removing=prev.filter(s=>!held.includes(s));
+  const adding=held.filter(s=>!prev.includes(s));
+  if(!adding.length&&!removing.length){closeModal();toast('No changes made');return;}
+  _pendingHold={fno,tid,held};
+  const action=removing.length&&!adding.length?'unhold':'hold';
+  showModal(`
+    <div class="mh"><h2>${action==='hold'?'Set Hold':'Remove Hold'} — Flat ${fno}</h2><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <div style="background:var(--amber-l);border:1px solid #FDE68A;border-radius:var(--r);padding:8px 11px;font-size:12px">
+        ${adding.length?'<b>Holding:</b> '+adding.join(', ')+'<br>':''}${removing.length?'<b>Releasing:</b> '+removing.join(', '):''}
+      </div>
+      <div class="f"><label>Date of instruction *</label><input type="date" id="hsp-date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="f"><label>Instruction given by *</label><input type="text" id="hsp-by" value="${ME?.name||''}"></div>
+      <div class="f"><label>Reason / Notes</label><textarea id="hsp-inst" rows="2" style="font-size:12px"></textarea></div>
+      <button class="btn bp bfull" onclick="confirmSaveHold()">Confirm</button>
+    </div>`);
+}
+
+function confirmSaveHold(){
+  const {fno,tid,held}=_pendingHold;
+  const date=document.getElementById('hsp-date').value;
+  const by=document.getElementById('hsp-by').value.trim();
+  const inst=document.getElementById('hsp-inst').value.trim();
+  if(!date||!by){toast('Date and name required');return;}
+  if(!S.holdFlats[fno])S.holdFlats[fno]={};
+  S.holdFlats[fno][tid]={stages:held,log:[...((S.holdFlats[fno][tid]||{}).log||[]),{by,byMob:ME?.mobile,date,instruction:inst,stages:held,ts:Date.now()}]};
+  if(!S.flatLog[fno])S.flatLog[fno]=[];
+  S.flatLog[fno].push({action:'hold-update',by,byMob:ME?.mobile,date,instruction:inst,stages:held,ts:Date.now()});
+  addActivityLog(`Hold updated — Flat ${fno} / ${getTrade(tid)?.name} — stages: ${held.join(', ')||'none'} — by ${by}`);
+  addNotif('all',`Flat ${fno} hold updated by ${by}. Stages: ${held.join(', ')||'none'}.`,'hold');
+  saveS();closeModal();renderContent();renderSidebar();toast('Hold saved ✅');
+}
+
+// ═══════════ SNAGGING MODAL
+function openSnagModal(tid,fno,stage){
+  const snags=getSnags(tid,fno,stage);
+  const trade=getTrade(tid);
+  const allowed=stageAllowed(tid,fno,stage);
+  const canSnag=allowed&&(canManage()||ME?.role==='supervisor');
+  const canDesnag=allowed&&(canManage()||ME?.trades?.includes(tid));
+
+  const snagHtml=snags.map(sn=>`
+    <div style="border:1px solid var(--border);border-radius:var(--r);padding:9px;margin-bottom:7px;background:${sn.status==='open'?'var(--orange-l)':'var(--green-l)'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <span style="font-weight:600;font-size:12px">${sn.status==='open'?'🚩 Open':'✅ Resolved'}</span>
+        <span style="font-size:10px;color:var(--text2)">${fmt(sn.createdAt)} · <b>${sn.createdBy}</b> (${sn.createdMobile})</span>
+      </div>
+      <div style="font-size:12px;margin-bottom:5px">${sn.desc}</div>
+      <div class="photo-grid">${(sn.photos||[]).map(p=>`<div class="photo-thumb"><img src="${p.data}"><div class="photo-caption">${p.caption}</div></div>`).join('')}</div>
+      ${sn.status==='resolved'?`
+        <div style="margin-top:6px;font-size:11px;color:var(--green);font-weight:600">✅ Desnagged by <b>${sn.resolvedBy}</b> (${sn.resolvedMobile}) on ${fmt(sn.resolvedAt)}</div>
+        ${sn.resolveNote?`<div style="font-size:11px;color:var(--text2);margin-top:2px">${sn.resolveNote}</div>`:''}
+        <div class="photo-grid">${(sn.resolvePhotos||[]).map(p=>`<div class="photo-thumb"><img src="${p.data}"><div class="photo-caption">${p.caption}</div></div>`).join('')}</div>`:''}
+      ${sn.status==='open'&&canDesnag?`
+        <div style="margin-top:7px;border-top:1px solid var(--border);padding-top:7px">
+          <div style="font-size:11px;font-weight:700;margin-bottom:5px">Desnag:</div>
+          <div class="f" style="margin-bottom:6px"><label>Notes</label><textarea id="dn-note-${sn.id}" rows="2" style="font-size:12px"></textarea></div>
+          <div class="f" style="margin-bottom:6px"><label>Photo proof</label><input type="file" accept="image/*" id="dn-photo-${sn.id}" style="font-size:11px"></div>
+          <button class="btn bg" style="width:100%" onclick="resolveSnag('${sn.id}')">✅ Mark Desnagged</button>
+        </div>`:''}
+    </div>`).join('');
+
+  showModal(`
+    <div class="mh"><h2>Snagging — Flat ${fno} / ${stage}</h2><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:10px">Trade: ${trade?.name}</div>
+    ${!allowed?`<div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:var(--r);padding:8px 11px;font-size:12px;color:#92400E;margin-bottom:10px">⚠ This stage is frozen/held — snagging disabled.</div>`:''}
+    ${snagHtml||'<p style="color:var(--text2);font-size:12px;margin-bottom:10px">No snags yet.</p>'}
+    ${canSnag?`
+    <div style="border:1px solid var(--border);border-radius:var(--r);padding:11px;background:var(--bg3)">
+      <div style="font-weight:600;font-size:12px;margin-bottom:7px">➕ New snag</div>
+      <div class="f" style="margin-bottom:7px"><label>Description *</label><textarea id="sn-desc" rows="2" style="font-size:12px" placeholder="Describe the issue..."></textarea></div>
+      <div class="f" style="margin-bottom:7px"><label>Photos</label><input type="file" accept="image/*" multiple id="sn-photos" style="font-size:11px"></div>
+      <button class="btn bo" style="width:100%" onclick="addSnag('${tid}',${fno},'${stage}')">🚩 Log Snag</button>
+    </div>`:''}
+  `);
+}
+
+function addSnag(tid,fno,stage){
+  const desc=document.getElementById('sn-desc').value.trim();
+  if(!desc){toast('Enter description');return;}
+  const files=document.getElementById('sn-photos').files;
+  const readPhotos=(files,cb)=>{
+    if(!files.length)return cb([]);
+    const photos=[];let done=0;
+    Array.from(files).forEach((f,i)=>{const r=new FileReader();r.onload=e=>{photos[i]={data:e.target.result,caption:'Photo '+(i+1)};done++;if(done===files.length)cb(photos);};r.readAsDataURL(f);});
+  };
+  readPhotos(files,photos=>{
+    const id=uid();
+    S.snags[id]={id,tid,fno,stage,desc,photos,status:'open',
+      createdBy:ME.name,createdMobile:ME.mobile,createdAt:Date.now(),
+      resolvedBy:null,resolvedMobile:null,resolvedAt:null,resolvePhotos:[],resolveNote:''};
+    saveS();
+    addActivityLog(`Snag logged: Flat ${fno} / ${getTrade(tid)?.name} / ${stage} — ${desc.slice(0,60)}`);
+    const contractors=Object.values(S.users).filter(u=>u.status==='approved'&&u.trades?.includes(tid));
+    contractors.forEach(u=>{
+      addNotif(u.mobile,`🚩 Snag: Flat ${fno}/${stage} — ${desc.slice(0,50)}. By: ${ME.name}`,'snag');
+      mockSMS(u.mobile,`Daffodil Tracker: New snag Flat ${fno}, ${getTrade(tid)?.name}, ${stage}. Issue: ${desc.slice(0,60)}. By ${ME.name} (${ME.mobile}).`);
+    });
+    addNotif('all',`Snag: Flat ${fno}/${getTrade(tid)?.name}/${stage} by ${ME.name}`,'snag');
+    closeModal();renderContent();toast('Snag logged.');
+  });
+}
+
+function resolveSnag(sid){
+  const sn=S.snags[sid];if(!sn)return;
+  const note=document.getElementById('dn-note-'+sid).value.trim();
+  const file=document.getElementById('dn-photo-'+sid)?.files[0];
+  const finish=(photo)=>{
+    sn.status='resolved';sn.resolvedBy=ME.name;sn.resolvedMobile=ME.mobile;sn.resolvedAt=Date.now();sn.resolveNote=note;
+    if(photo)sn.resolvePhotos=[photo];
+    saveS();
+    addActivityLog(`Desnagged: Flat ${sn.fno}/${sn.stage} by ${ME.name}`);
+    addNotif('all',`✅ Desnagged: Flat ${sn.fno}/${sn.stage} by ${ME.name} (${ME.mobile})`,'desnag');
+    mockSMS(ME.mobile,`Daffodil Tracker: Flat ${sn.fno} snag resolved by ${ME.name}. Stage: ${sn.stage}.`);
+    closeModal();renderContent();toast('Snag resolved.');
+  };
+  if(file){const r=new FileReader();r.onload=e=>finish({data:e.target.result,caption:'Resolution photo'});r.readAsDataURL(file);}
+  else finish(null);
+}
+
+function mockSMS(mobile,msg){console.log(`[SMS→${mobile}]: ${msg}`);}
+
+// ═══════════ OVERVIEW ═══════════
+function renderOverview(c){
+  let gD=0,gT=0;
+  const cards=sortedTrades().map(t=>{
+    let d=0,tot=0;
+    allFlats().forEach(fno=>{if(isRefuge(fno))return;const p=flatProgress(t.id,fno);d+=p.done;tot+=p.total;});
+    gD+=d;gT+=tot;
+    const pct=tot>0?Math.round(d/tot*100):0;
+    const col=pct>70?'#059669':pct>30?'#D97706':'#DC2626';
+    return `<div class="mc" style="cursor:pointer" onclick="curTrade='${t.id}';curPage='progress';buildTNav();buildTradeSel();renderSidebar();renderContent()">
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px"><span class="trade-dot" style="background:${t.color}"></span><span class="ml" style="margin:0">${t.name}</span></div>
+      <div class="mv" style="color:${col}">${pct}%</div>
+      <div class="pbar" style="width:100%;margin-top:4px"><div class="pfill" style="width:${pct}%;background:${col}"></div></div>
+      <div style="font-size:10px;color:var(--text2);margin-top:2px">${tot} / ${d} / ${tot-d}</div>
+      <div style="font-size:9px;color:var(--text3)">total · done · pending</div>
+    </div>`;
+  }).join('');
+  const op=gT>0?Math.round(gD/gT*100):0;
+  const FGS=buildFGS();
+  const floorRows=FGS.map((fg,i)=>`<tr>
+    <td style="font-weight:600;cursor:pointer" onclick="curFG=${i};curPage='progress';buildTNav();renderSidebar();renderContent()">${fg.l}</td>
+    ${sortedTrades().map(t=>{
+      let d=0,tot=0;fg.f.forEach(fl=>floorFlats(fl).forEach(fno=>{if(isRefuge(fno))return;const p=flatProgress(t.id,fno);d+=p.done;tot+=p.total;}));
+      const pct=tot>0?Math.round(d/tot*100):0;const col=pct>70?'#059669':pct>30?'#D97706':'#DC2626';
+      return `<td><div style="display:flex;align-items:center;gap:5px"><div class="pbar" style="width:55px"><div class="pfill" style="width:${pct}%;background:${col}"></div></div><span style="font-size:10px;color:${col};font-weight:700">${pct}%</span></div></td>`;
+    }).join('')}
+  </tr>`).join('');
+  c.innerHTML=`
+  <div class="mg">
+    <div class="mc"><div class="ml">Overall</div><div class="mv ${op>70?'g':op>30?'a':'r'}">${op}%</div></div>
+    <div class="mc"><div class="ml">Total</div><div class="mv b">${gT}</div></div>
+    <div class="mc"><div class="ml">Done</div><div class="mv g">${gD}</div></div>
+    <div class="mc"><div class="ml">Pending</div><div class="mv a">${gT-gD}</div></div>
+    <div class="mc"><div class="ml">Open Snags</div><div class="mv o">${Object.values(S.snags).filter(s=>s.status==='open').length}</div></div>
+  </div>
+  <div style="font-weight:600;font-size:13px;margin-bottom:8px">Trade Progress (Total / Done / Pending)</div>
+  <div class="mg">${cards}</div>
+  <div style="font-weight:600;font-size:13px;margin:12px 0 7px">Floor Group Breakdown</div>
+  <div class="tw"><table><thead><tr><th>Group</th>${sortedTrades().map(t=>`<th><span class="trade-dot" style="background:${t.color};margin-right:4px"></span>${t.name}</th>`).join('')}</tr></thead><tbody>${floorRows}</tbody></table></div>`;
+}
+
+// ═══════════ SNAGGING VIEW ═══════════
+function renderSnagging(c){
+  const mine=canManage()?Object.values(S.snags):Object.values(S.snags).filter(s=>ME?.trades?.includes(s.tid));
+  const open=mine.filter(s=>s.status==='open');
+  const resolved=mine.filter(s=>s.status==='resolved');
+  const row=sn=>{const t=getTrade(sn.tid);return `<tr>
+    <td><strong>${sn.fno}</strong></td>
+    <td>${t?.name||sn.tid}</td><td>${sn.stage}</td>
+    <td><span class="tag ${sn.status==='open'?'t-snag':'t-desn'}">${sn.status==='open'?'🚩 Open':'✅ Done'}</span></td>
+    <td style="max-width:160px;font-size:11px">${sn.desc.slice(0,70)}${sn.desc.length>70?'...':''}</td>
+    <td style="font-size:11px">${sn.createdBy}<br><span style="color:var(--text3)">${sn.createdMobile}</span></td>
+    <td style="font-size:10px;color:var(--text2)">${fmt(sn.createdAt)}</td>
+    ${sn.status==='resolved'?`<td style="font-size:11px">${sn.resolvedBy}<br><span style="color:var(--text3)">${sn.resolvedMobile}</span></td>`:'<td>—</td>'}
+    <td><button class="btn" style="padding:2px 7px;font-size:10px" onclick="openSnagModal('${sn.tid}',${sn.fno},'${sn.stage}')">View</button></td>
+  </tr>`;};
+  const thead=`<thead><tr><th>Flat</th><th>Trade</th><th>Stage</th><th>Status</th><th>Issue</th><th>Logged by</th><th>Date</th><th>Resolved by</th><th></th></tr></thead>`;
+  c.innerHTML=`
+  <div class="mg">
+    <div class="mc"><div class="ml">Open</div><div class="mv o">${open.length}</div></div>
+    <div class="mc"><div class="ml">Resolved</div><div class="mv g">${resolved.length}</div></div>
+    <div class="mc"><div class="ml">Total</div><div class="mv b">${mine.length}</div></div>
+  </div>
+  <div style="font-weight:600;font-size:13px;margin-bottom:7px">🚩 Open Snags</div>
+  <div class="tw" style="margin-bottom:14px"><table>${thead}<tbody>${open.map(row).join('')||'<tr><td colspan="9" style="text-align:center;padding:14px;color:var(--green)">No open snags ✅</td></tr>'}</tbody></table></div>
+  <div style="font-weight:600;font-size:13px;margin-bottom:7px">✅ Resolved</div>
+  <div class="tw"><table>${thead}<tbody>${resolved.map(row).join('')||'<tr><td colspan="9" style="text-align:center;padding:14px;color:var(--text2)">None yet</td></tr>'}</tbody></table></div>`;
+}
+
+// ═══════════ SLAB TRACKER ═══════════
+function renderSlab(c){
+  const sl=S.slab;
+  const milestones=`
+  <div class="cfg-card" style="margin-bottom:10px">
+    <div style="font-weight:600;font-size:13px;margin-bottom:10px">📅 Project Milestones</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:9px">
+      <div class="f" style="margin:0"><label>Bhoomi Pujan</label><input type="date" value="${sl.bhoomiPujan||''}" onchange="S.slab.bhoomiPujan=this.value;saveS();"></div>
+      <div class="f" style="margin:0"><label>Excavation Start</label><input type="date" value="${sl.excavation||''}" onchange="S.slab.excavation=this.value;saveS();"></div>
+      <div class="f" style="margin:0"><label>Work Start</label><input type="date" value="${sl.workStart||''}" onchange="S.slab.workStart=this.value;saveS();"></div>
+      ${(sl.customDates||[]).map((cd,i)=>`
+        <div class="f" style="margin:0">
+          <label>${cd.label||'Custom'} <button onclick="removeCustomDate(${i})" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--red)">×</button></label>
+          <input type="date" value="${cd.date||''}" onchange="S.slab.customDates[${i}].date=this.value;saveS();">
+        </div>`).join('')}
+    </div>
+    <div style="display:flex;gap:7px;margin-top:10px;align-items:flex-end">
+      <div class="f" style="margin:0;flex:1"><label>Add custom milestone label</label><input type="text" id="cd-label" placeholder="e.g. Maivan Start"></div>
+      <button class="btn bp" onclick="addCustomDate()">+ Add</button>
+    </div>
+  </div>`;
+
+  // Parts header — editable name + Cast Date + Days per part
+  const partCols=sl.parts.map((p,pi)=>`<th colspan="2" style="text-align:center;border-left:2px solid var(--border2);padding:4px 6px">
+    <div style="display:flex;align-items:center;gap:4px;justify-content:center">
+      <input type="text" value="${p.name}" onchange="S.slab.parts[${pi}].name=this.value;saveS();" style="width:130px;padding:2px 5px;border:1px solid var(--border2);border-radius:4px;font-size:11px;font-weight:600;text-align:center;background:var(--bg3)">
+      ${sl.parts.length>1?`<button onclick="removeSlabPart(${pi})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:13px;line-height:1" title="Remove part">×</button>`:''}
+    </div>
+  </th>`).join('');
+  const partSubCols=sl.parts.map(p=>`<th style="border-left:2px solid var(--border2)">Cast Date</th><th>Days</th>`).join('');
+
+  const rows=sl.entries.map((entry,ei)=>{
+    const partCells=sl.parts.map((p,pi)=>{
+      const ep=entry.parts.find(x=>x.partId===p.id)||{date:''};
+      // Days = diff from previous slab's cast date for same part
+      let days='—';let dayCol='var(--text3)';let dayBg='transparent';
+      if(ep.date&&ei>0){
+        const prevEntry=sl.entries[ei-1];
+        const prevPart=prevEntry?.parts.find(x=>x.partId===p.id);
+        if(prevPart?.date){
+          const d=Math.round((new Date(ep.date)-new Date(prevPart.date))/(1000*86400));
+          if(d>0){
+            days=d+'d';
+            if(d<=15){dayCol='#065F46';dayBg='#D1FAE5';}
+            else if(d<=25){dayCol='#92400E';dayBg='#FEF3C7';}
+            else{dayCol='#991B1B';dayBg='#FEE2E2';}
+          }
+        }
+      }
+      return `<td style="border-left:2px solid var(--border2)">
+        <input type="date" value="${ep.date||''}" onchange="updateSlabPart(${ei},'${p.id}','date',this.value)" style="width:110px;font-size:11px;border:1px solid var(--border2);border-radius:4px;padding:2px 4px">
+      </td>
+      <td><span style="font-weight:700;font-size:11px;padding:2px 6px;border-radius:4px;background:${dayBg};color:${dayCol}">${days}</span></td>`;
+    }).join('');
+    return `<tr>
+      <td style="text-align:center;color:var(--text2);font-size:11px">${entry.sr}</td>
+      <td style="min-width:180px"><input type="text" value="${entry.label||''}" onchange="S.slab.entries[${ei}].label=this.value;saveS();" style="width:100%;padding:3px 6px;border:1px solid var(--border2);border-radius:4px;font-size:11px;font-weight:600"></td>
+      ${partCells}
+    </tr>`;
+  }).join('');
+
+  c.innerHTML=`
+  ${milestones}
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div>
+      <div style="font-weight:600;font-size:13px">Slab Casting Programme</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:2px">Days = gap from previous slab's cast date &nbsp;
+        <span style="background:#D1FAE5;color:#065F46;padding:1px 6px;border-radius:3px;font-weight:700">≤15d</span>
+        <span style="background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:3px;font-weight:700;margin:0 3px">≤25d</span>
+        <span style="background:#FEE2E2;color:#991B1B;padding:1px 6px;border-radius:3px;font-weight:700">>25d</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:7px">
+      <button class="btn" onclick="addSlabPart()">+ Part</button>
+      <button class="btn" onclick="addSlabRow()">+ Row</button>
+      <button class="btn bp" onclick="exportSlabCSV()">⬇ Export</button>
+    </div>
+  </div>
+  <div class="tw"><table class="slab-table">
+    <thead>
+      <tr><th rowspan="2" style="text-align:center">SR</th><th rowspan="2">Slab / Label</th>${partCols}</tr>
+      <tr>${partSubCols}</tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function updateSlabPart(ei,partId,field,val){
+  const ep=S.slab.entries[ei].parts.find(x=>x.partId===partId);
+  if(ep)ep[field]=val;
+  saveS();
+}
+function addSlabPart(){
+  const id='p'+uid();
+  S.slab.parts.push({id,name:'New Part'});
+  // Add empty entry for this part in all existing rows
+  S.slab.entries.forEach(e=>{if(!e.parts.find(p=>p.partId===id))e.parts.push({partId:id,date:''}); });
+  saveS();renderSlab(document.getElementById('content'));
+}
+function removeSlabPart(pi){
+  if(!confirm('Remove this part column?'))return;
+  const pid=S.slab.parts[pi].id;
+  S.slab.parts.splice(pi,1);
+  S.slab.entries.forEach(e=>{e.parts=e.parts.filter(p=>p.partId!==pid);});
+  saveS();renderSlab(document.getElementById('content'));
+}
+function addSlabRow(){
+  const sr=(S.slab.entries[S.slab.entries.length-1]?.sr||0)+1;
+  S.slab.entries.push({id:'s'+uid(),sr,label:'',targetDays:'',parts:S.slab.parts.map(p=>({partId:p.id,schedule:'',date:'',castBy:''}))});
+  saveS();renderSlab(document.getElementById('content'));
+}
+function addCustomDate(){
+  const label=document.getElementById('cd-label').value.trim();
+  if(!label){toast('Enter label');return;}
+  if(!S.slab.customDates)S.slab.customDates=[];
+  S.slab.customDates.push({label,date:''});
+  saveS();renderSlab(document.getElementById('content'));
+}
+function removeCustomDate(i){S.slab.customDates.splice(i,1);saveS();renderSlab(document.getElementById('content'));}
+function exportSlabCSV(){
+  const sl=S.slab;
+  const rows=[['SR','Label',...sl.parts.flatMap(p=>[p.name+' Cast Date',p.name+' Days'])]];
+  sl.entries.forEach((e,ei)=>{
+    const row=[e.sr,e.label];
+    sl.parts.forEach(p=>{
+      const ep=e.parts.find(x=>x.partId===p.id)||{};
+      let days='';
+      if(ep.date&&ei>0){
+        const prev=sl.entries[ei-1].parts.find(x=>x.partId===p.id);
+        if(prev?.date){const d=Math.round((new Date(ep.date)-new Date(prev.date))/86400000);if(d>0)days=d;}
+      }
+      row.push(ep.date||'',days);
+    });
+    rows.push(row);
+  });
+  const csv=rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='Daffodil_Slab_Tracker.csv';a.click();
+}
+
+// ═══════════ UNIT MASTER ═══════════
+function renderUnitMaster(c){
+  const counts={normal:0,jodi:0,hold:0,raw:0,frozen:0,refuge:0};
+  let html='';
+  buildFGS().forEach(fg=>{
+    html+=`<div style="font-weight:600;font-size:12px;margin:10px 0 6px;color:var(--text2)">${fg.l}</div><div class="um-grid">`;
+    fg.f.forEach(fl=>{
+      floorFlats(fl).forEach(fno=>{
+        let cls='um-normal',label='';
+        if(isRefuge(fno)){cls='um-refuge';label='Refuge';counts.refuge++;}
+        else if(isFrozen(fno)){cls='um-frozen';label='Frozen';counts.frozen++;}
+        else if(isHold(fno)){cls='um-hold';label='Hold';counts.hold++;}
+        else if(isRaw(fno)){cls='um-raw';label='RAW';counts.raw++;}
+        else if(isJodi(fno)){cls='um-jodi';label=`J+${jodiOf(fno)}`;counts.jodi++;}
+        else counts.normal++;
+        html+=`<div class="um-cell ${cls}" title="Flat ${fno} — ${label||'Normal'}"><div>${fno}</div><div class="um-label">${label}</div></div>`;
+      });
+    });
+    html+='</div>';
+  });
+  c.innerHTML=`
+  <div style="font-weight:600;font-size:14px;margin-bottom:10px">Unit Master</div>
+  <div class="mg" style="margin-bottom:14px">
+    <div class="mc"><div class="ml">Normal</div><div class="mv b">${counts.normal}</div></div>
+    <div class="mc"><div class="ml">Jodi</div><div class="mv p">${counts.jodi}</div></div>
+    <div class="mc"><div class="ml">Hold</div><div class="mv a">${counts.hold}</div></div>
+    <div class="mc"><div class="ml">RAW</div><div class="mv b">${counts.raw}</div></div>
+    <div class="mc"><div class="ml">Frozen</div><div class="mv r">${counts.frozen}</div></div>
+    <div class="mc"><div class="ml">Refuge</div><div class="mv" style="color:var(--text3)">${counts.refuge}</div></div>
+  </div>
+  <div class="legend" style="margin-bottom:12px">
+    <div class="leg"><div class="leg-dot" style="background:var(--bg2);border:1px solid var(--border)"></div>Normal</div>
+    <div class="leg"><div class="leg-dot" style="background:#F3E8FF;border:1px solid #DDD6FE"></div>Jodi</div>
+    <div class="leg"><div class="leg-dot" style="background:#FEF3C7;border:1px solid #FDE68A"></div>Hold</div>
+    <div class="leg"><div class="leg-dot" style="background:#DBEAFE;border:1px solid #BFDBFE"></div>RAW</div>
+    <div class="leg"><div class="leg-dot" style="background:#F3F4F6;border:1px dashed #D1D5DB"></div>Frozen</div>
+    <div class="leg"><div class="leg-dot" style="background:#F9FAFB;border:1px dashed #D1D5DB"></div>Refuge</div>
+  </div>
+  ${html}`;
+}
+
+// ═══════════ ACTIVITY LOG ═══════════
+function renderActivityLog(c){
+  const logs=S.activityLog.slice(0,200);
+  c.innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+    <div style="font-weight:600;font-size:14px">Activity Log</div>
+    <span style="font-size:11px;color:var(--text2)">${logs.length} entries</span>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden">
+    ${logs.map(l=>`<div class="log-item">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="log-who">${l.who}</span><span style="font-size:10px;color:var(--text3)">${new Date(l.ts).toLocaleString('en-IN')}</span>
+      </div>
+      <div class="log-action">${l.action}</div>
+    </div>`).join('')||'<div style="padding:20px;text-align:center;color:var(--text2)">No activity yet.</div>'}
+  </div>`;
+}
+
+// ═══════════ USERS ═══════════
+function renderUsers(c){
+  if(!canAdmin()){c.innerHTML='<p style="padding:20px">Admin only.</p>';return;}
+  const users=Object.values(S.users);
+  const pending=users.filter(u=>u.status==='pending');
+  const approved=users.filter(u=>u.status==='approved');
+  const uRow=u=>`<div class="user-row">
+    <div class="av" style="width:28px;height:28px;font-size:11px;flex-shrink:0">${u.name.slice(0,2).toUpperCase()}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:600;font-size:12px">${u.name}</div>
+      <div style="font-size:11px;color:var(--text2)">${u.mobile} · ${RL[u.role]||u.role}${u.trades?.length?' · '+u.trades.map(t=>getTrade(t)?.name||t).join(', '):''}</div>
+    </div>
+    <span class="ustatus u-appr">approved</span>
+    <button class="btn" style="padding:2px 7px;font-size:10px" onclick="editUserModal('${u.mobile}')">Edit</button>
+  </div>`;
+  c.innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+    <div style="font-size:14px;font-weight:600">Users</div>
+    <button class="btn bp" onclick="addUserModal()">+ Add user</button>
+  </div>
+  ${pending.length?`<div style="background:var(--amber-l);border:1px solid #FDE68A;border-radius:var(--r);padding:9px 12px;margin-bottom:11px;font-size:12px">
+    <strong>⏳ ${pending.length} pending</strong>
+    ${pending.map(u=>`<div style="margin-top:5px;display:flex;align-items:center;gap:7px">
+      <span>${u.name} (${u.mobile})</span>
+      <button class="btn bg" style="padding:2px 7px;font-size:10px" onclick="approveUserModal('${u.mobile}')">Approve</button>
+      <button class="btn bd" style="padding:2px 7px;font-size:10px" onclick="rejectUser('${u.mobile}')">Reject</button>
+    </div>`).join('')}
+  </div>`:''}
+  <div>${approved.map(uRow).join('')}</div>`;
+}
+function addUserModal(){
+  showModal(`<div class="mh"><h2>Add User</h2><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <div class="f"><label>Full Name *</label><input type="text" id="au-name"></div>
+      <div class="f"><label>Mobile *</label><input type="tel" id="au-mob"></div>
+      <div class="f"><label>Role</label><select id="au-role">${ROLES.map(r=>`<option value="${r}">${RL[r]}</option>`).join('')}</select></div>
+      <div class="f"><label>Trades</label>${S.trades.map(t=>`<label style="display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:12px;cursor:pointer"><input type="checkbox" class="au-tc" value="${t.id}"> ${t.name}</label>`).join('')}</div>
+      <button class="btn bp bfull" onclick="saveNewUser()">Add</button>
+    </div>`);
+}
+function saveNewUser(){
+  const name=document.getElementById('au-name').value.trim();
+  const mob=document.getElementById('au-mob').value.replace(/\D/g,'');
+  const role=document.getElementById('au-role').value;
+  const trades=Array.from(document.querySelectorAll('.au-tc:checked')).map(c=>c.value);
+  if(!name||mob.length<10){toast('Enter valid name and mobile');return;}
+  S.users[mob]={name,mobile:mob,role,trades,status:'approved',joinedAt:Date.now()};
+  saveS();closeModal();renderUsers(document.getElementById('content'));toast('User added');
+}
+function editUserModal(mob){
+  const u=S.users[mob];if(!u)return;
+  showModal(`<div class="mh"><h2>Edit: ${u.name}</h2><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <div class="f"><label>Name</label><input type="text" id="eu-name" value="${u.name}"></div>
+      <div class="f"><label>Role</label><select id="eu-role">${ROLES.map(r=>`<option value="${r}"${r===u.role?' selected':''}>${RL[r]}</option>`).join('')}</select></div>
+      <div class="f"><label>Trades</label>${S.trades.map(t=>`<label style="display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:12px;cursor:pointer"><input type="checkbox" class="eu-tc" value="${t.id}" ${u.trades?.includes(t.id)?'checked':''}> ${t.name}</label>`).join('')}</div>
+      <div class="f"><label>Status</label><select id="eu-status">
+        <option value="approved"${u.status==='approved'?' selected':''}>Approved</option>
+        <option value="pending"${u.status==='pending'?' selected':''}>Pending</option>
+        <option value="rejected"${u.status==='rejected'?' selected':''}>Rejected</option>
+      </select></div>
+      <div style="display:flex;gap:7px">
+        <button class="btn bp" style="flex:1" onclick="saveEditUser('${mob}')">Save</button>
+        ${mob!=='9999999999'?`<button class="btn bd" onclick="deleteUser('${mob}')">Delete</button>`:''}
+      </div>
+    </div>`);
+}
+function saveEditUser(mob){
+  const u=S.users[mob];if(!u)return;
+  u.name=document.getElementById('eu-name').value.trim()||u.name;
+  u.role=document.getElementById('eu-role').value;
+  u.trades=Array.from(document.querySelectorAll('.eu-tc:checked')).map(c=>c.value);
+  u.status=document.getElementById('eu-status').value;
+  saveS();closeModal();renderUsers(document.getElementById('content'));toast('User updated');
+}
+function approveUserModal(mob){
+  const u=S.users[mob];if(!u)return;
+  showModal(`<div class="mh"><h2>Approve ${u.name}</h2><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <div class="f"><label>Role</label><select id="apr-role">${ROLES.map(r=>`<option value="${r}">${RL[r]}</option>`).join('')}</select></div>
+      <div class="f"><label>Trades</label>${S.trades.map(t=>`<label style="display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:12px;cursor:pointer"><input type="checkbox" class="apr-tc" value="${t.id}"> ${t.name}</label>`).join('')}</div>
+      <button class="btn bp bfull" onclick="confirmApprove('${mob}')">✅ Approve</button>
+    </div>`);
+}
+function confirmApprove(mob){
+  const u=S.users[mob];if(!u)return;
+  u.role=document.getElementById('apr-role').value;
+  u.trades=Array.from(document.querySelectorAll('.apr-tc:checked')).map(c=>c.value);
+  u.status='approved';
+  saveS();
+  addNotif(mob,`✅ Access approved as ${RL[u.role]}.`,'approval');
+  mockSMS(mob,`Daffodil Tracker: Access approved as ${RL[u.role]}.`);
+  closeModal();renderUsers(document.getElementById('content'));toast('Approved');
+}
+function rejectUser(mob){S.users[mob].status='rejected';saveS();renderUsers(document.getElementById('content'));toast('Rejected');}
+function deleteUser(mob){if(!confirm('Delete?'))return;delete S.users[mob];saveS();closeModal();renderUsers(document.getElementById('content'));}
+
+// ═══════════ LINKS ═══════════
+function renderLinks(c){
+  const cards=S.links.map(lnk=>`<div class="cfg-card">
+    <div class="cfg-head">
+      <div><div style="font-weight:600;font-size:13px">${lnk.label}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${RL[lnk.role]} · ${getTrade(lnk.tradeId)?.name||'All trades'} · Created ${fmt(lnk.createdAt)}</div>
+      </div>
+      <button class="btn bd" style="padding:2px 7px;font-size:10px" onclick="deleteLink('${lnk.id}')">Delete</button>
+    </div>
+    <div class="link-card">
+      <span class="link-url" id="lu-${lnk.id}">${lnk.url}</span>
+      <button class="copy-btn" onclick="copyLink('${lnk.id}')">📋 Copy</button>
+    </div>
+  </div>`).join('');
+  c.innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+    <div style="font-size:14px;font-weight:600">Share Links</div>
+    <button class="btn bp" onclick="createLinkModal()">+ Generate</button>
+  </div>
+  ${cards||'<p style="color:var(--text2)">No links yet.</p>'}`;
+}
+function createLinkModal(){
+  showModal(`<div class="mh"><h2>Generate Link</h2><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <div class="f"><label>Label</label><input type="text" id="nl-label" placeholder="e.g. Tiling contractor"></div>
+      <div class="f"><label>Role</label><select id="nl-role">${ROLES.filter(r=>r!=='admin').map(r=>`<option value="${r}">${RL[r]}</option>`).join('')}</select></div>
+      <div class="f"><label>Trade</label><select id="nl-trade"><option value="">All trades</option>${S.trades.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}</select></div>
+      <button class="btn bp bfull" onclick="saveLink()">Generate</button>
+    </div>`);
+}
+function saveLink(){
+  const label=document.getElementById('nl-label').value.trim();
+  const role=document.getElementById('nl-role').value;
+  const tradeId=document.getElementById('nl-trade').value;
+  if(!label){toast('Enter label');return;}
+  const id=uid();
+  const url=`${location.href.split('?')[0]}?link=${id}`;
+  S.links.push({id,label,role,tradeId,url,createdAt:Date.now(),createdBy:ME.name});
+  saveS();closeModal();renderLinks(document.getElementById('content'));toast('Link generated');
+}
+function copyLink(id){const el=document.getElementById('lu-'+id);if(el)navigator.clipboard.writeText(el.textContent).then(()=>toast('Copied!')).catch(()=>toast(el.textContent));}
+function deleteLink(id){S.links=S.links.filter(l=>l.id!==id);saveS();renderLinks(document.getElementById('content'));}
+
+// ═══════════ CONFIGURE ═══════════
+function renderConfig(c){
+  const tabs=['bldg','trades','jodi','raw'];
+  const at=window._cfgTab||'bldg';
+  c.innerHTML=`
+  <div style="display:flex;gap:4px;margin-bottom:13px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+    ${[['bldg','Building'],['trades','Trades'],['jodi','Jodi Flats'],['raw','RAW Flats']].map(([t,l])=>
+      `<button class="btn${at===t?' bp':''}" style="font-size:11px" onclick="window._cfgTab='${t}';renderConfig(document.getElementById('content'))">${l}</button>`
+    ).join('')}
+  </div><div id="cfg-panel"></div>`;
+  if(at==='bldg')renderCfgBldg();
+  else if(at==='trades')renderCfgTrades();
+  else if(at==='jodi')renderCfgJodi();
+  else renderCfgRaw();
+}
+
+// BUILDING CONFIG
+function renderCfgBldg(){
+  const b=S.bldg;
+  document.getElementById('cfg-panel').innerHTML=`
+  <div class="cfg-card">
+    <div style="font-weight:600;font-size:13px;margin-bottom:11px">🏗 Building Configuration</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-bottom:11px">
+      <div class="f" style="margin:0"><label>No. of Floors</label><input type="number" id="bc-floors" value="${b.floors||50}" min="1" max="200"></div>
+      <div class="f" style="margin:0"><label>Flats per Floor</label><input type="number" id="bc-units" value="${b.unitsPerFloor||10}" min="1" max="50"></div>
+      <div class="f" style="margin:0"><label>Group size (floors)</label><input type="number" id="bc-grp" value="${b.groupSize||5}" min="1" max="20"></div>
+    </div>
+    <div style="background:var(--amber-l);border:1px solid #FDE68A;border-radius:var(--r);padding:8px 11px;font-size:12px;color:#92400E;margin-bottom:11px">
+      ⚠ Changing these rebuilds floor groups and sidebar. Existing data remains.
+    </div>
+    <button class="btn bp" onclick="saveBldgConfig()">Save Building Config</button>
+  </div>
+  <div class="cfg-card" style="margin-top:10px">
+    <div style="font-weight:600;font-size:13px;margin-bottom:7px">Current Setup</div>
+    <div style="font-size:12px;color:var(--text2)">
+      ${b.floors} floors × ${b.unitsPerFloor} flats = <strong>${b.floors*b.unitsPerFloor} total flats</strong><br>
+      ${buildFGS().length} floor groups of ${b.groupSize} floors each
+    </div>
+  </div>`;
+}
+function saveBldgConfig(){
+  const floors=parseInt(document.getElementById('bc-floors').value)||50;
+  const units=parseInt(document.getElementById('bc-units').value)||10;
+  const grp=parseInt(document.getElementById('bc-grp').value)||5;
+  S.bldg={floors,unitsPerFloor:units,groupSize:grp};
+  curFG=0;saveS();buildTradeSel();renderSidebar();renderCfgBldg();toast('Building config saved');
+}
+
+// TRADES with drag-to-reorder
+function renderCfgTrades(){
+  const trades=sortedTrades();
+  const cards=trades.map((t,idx)=>{
+    const dep=t.depTrade?getTrade(t.depTrade):null;
+    return `<div class="cfg-card" id="tc-${t.id}" draggable="true" ondragstart="dragStart('${t.id}')" ondragover="dragOver(event,'${t.id}')" ondrop="dropTrade(event,'${t.id}')" style="cursor:grab">
+      <div class="cfg-head">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:18px;cursor:grab;color:var(--text3)">⠿</span>
+          <span class="trade-dot" style="background:${t.color};width:12px;height:12px"></span>
+          <span style="font-size:14px;font-weight:600">${t.name}</span>
+          ${dep?`<span class="tag t-ready" style="font-size:9px">Dep: ${dep.name}${t.depStages?.length?' → '+t.depStages.join(', '):''}</span>`:''}
+        </div>
+        <div style="display:flex;gap:5px">
+          <button class="btn" style="padding:2px 5px;font-size:14px" onclick="moveTrade('${t.id}',-1)" ${idx===0?'disabled':''}>↑</button>
+          <button class="btn" style="padding:2px 5px;font-size:14px" onclick="moveTrade('${t.id}',1)" ${idx===trades.length-1?'disabled':''}>↓</button>
+          ${canAdmin()?`<button class="btn" style="padding:2px 7px;font-size:10px" onclick="editTradeModal('${t.id}')">Edit</button>`:''}
+          ${canAdmin()&&t.id!=='civil'?`<button class="btn bd" style="padding:2px 7px;font-size:10px" onclick="deleteTrade('${t.id}')">Del</button>`:''}
+        </div>
+      </div>
+      <div>${t.stages.map((s,i)=>`<span class="spill">${i+1}. ${s}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('cfg-panel').innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+    <div style="font-size:13px;font-weight:600">Trades <span style="font-size:11px;color:var(--text2);font-weight:400">— drag ⠿ or use ↑↓ to reorder</span></div>
+    ${canAdmin()?`<button class="btn bp" onclick="editTradeModal(null)">+ New trade</button>`:''}
+  </div>${cards}`;
+}
+let _dragTid=null;
+function dragStart(tid){_dragTid=tid;}
+function dragOver(e,tid){e.preventDefault();}
+function dropTrade(e,targetTid){
+  e.preventDefault();
+  if(!_dragTid||_dragTid===targetTid)return;
+  const sorted=sortedTrades();
+  const fromIdx=sorted.findIndex(t=>t.id===_dragTid);
+  const toIdx=sorted.findIndex(t=>t.id===targetTid);
+  const [moved]=sorted.splice(fromIdx,1);sorted.splice(toIdx,0,moved);
+  sorted.forEach((t,i)=>t.order=i);
+  saveS();renderCfgTrades();
+}
+function moveTrade(tid,dir){
+  const sorted=sortedTrades();
+  const idx=sorted.findIndex(t=>t.id===tid);
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=sorted.length)return;
+  [sorted[idx].order,sorted[newIdx].order]=[sorted[newIdx].order,sorted[idx].order];
+  saveS();renderCfgTrades();buildTradeSel();
+}
+
+function editTradeModal(tid){
+  const t=tid?getTrade(tid):null;
+  const depOpts=S.trades.filter(tr=>!tid||tr.id!==tid).map(tr=>`<option value="${tr.id}"${t?.depTrade===tr.id?' selected':''}>${tr.name}</option>`).join('');
+  const depStages=t?.depStages||[];
+  const depTrade=t?.depTrade?getTrade(t.depTrade):null;
+  const depStageOpts=depTrade?depTrade.stages.map(s=>`<div class="ms-option${depStages.includes(s)?' sel':''}" onclick="this.classList.toggle('sel');updateDepSel()" data-stage="${s}">${s}</div>`).join(''):'';
+  showModal(`<div class="mh"><h2>${t?'Edit: '+t.name:'New trade'}</h2><button class="xbtn" onclick="closeModal()">×</button></div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <div class="f"><label>Name</label><input type="text" id="tf-name" value="${t?.name||''}"></div>
+      <div class="f"><label>Colour</label><input type="color" id="tf-color" value="${t?.color||TCOLORS[S.trades.length%TCOLORS.length]}" style="width:55px;height:30px;border:1px solid var(--border2);border-radius:var(--r);padding:2px;cursor:pointer"></div>
+      <div class="f"><label>Stages (one per line)</label><textarea id="tf-stages" rows="6" style="font-size:12px">${t?.stages.join('\n')||''}</textarea></div>
+      <div class="f"><label>Dependency trade</label>
+        <select id="tf-dep-trade" onchange="onDepTradeChange(this.value,'${tid||''}')">
+          <option value="">None</option>${depOpts}
+        </select>
+      </div>
+      <div id="tf-dep-stages-wrap" style="${t?.depTrade?'':'display:none'}">
+        <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;display:flex;align-items:center;gap:10px;margin-bottom:5px">
+          Trigger stages (select multiple)
+          <span style="font-weight:400;text-transform:none;font-size:12px">
+            <input type="checkbox" id="tf-per-flat" ${t?.perFlat?'checked':''} onchange="document.getElementById('tf-fixed-stages').style.display=this.checked?'none':'block'"> Per flat
+          </span>
+        </label>
+        <div id="tf-fixed-stages" style="${t?.perFlat?'display:none':''}">
+          <div class="ms-dropdown" id="dep-stage-opts">${depStageOpts}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:4px">Selected: <span id="dep-stages-selected">${depStages.join(', ')||'none'}</span></div>
+        </div>
+      </div>
+      <button class="btn bp bfull" onclick="saveTrade(${tid?`'${tid}'`:'null'})">${t?'Save':'Create'}</button>
+    </div>`);
+}
+function updateDepSel(){
+  const sel=Array.from(document.querySelectorAll('#dep-stage-opts .ms-option.sel')).map(e=>e.dataset.stage);
+  const el=document.getElementById('dep-stages-selected');if(el)el.textContent=sel.join(', ')||'none';
+}
+function onDepTradeChange(v){
+  const w=document.getElementById('tf-dep-stages-wrap');
+  const opts=document.getElementById('dep-stage-opts');
+  if(!v){w.style.display='none';return;}
+  w.style.display='block';
+  const dt=getTrade(v);
+  if(opts&&dt)opts.innerHTML=dt.stages.map(s=>`<div class="ms-option" onclick="this.classList.toggle('sel');updateDepSel()" data-stage="${s}">${s}</div>`).join('');
+  updateDepSel();
+}
+function saveTrade(existingId){
+  const name=document.getElementById('tf-name').value.trim();
+  if(!name){toast('Enter name');return;}
+  const stages=document.getElementById('tf-stages').value.trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  if(!stages.length){toast('Add stages');return;}
+  const color=document.getElementById('tf-color').value;
+  const depTrade=document.getElementById('tf-dep-trade').value||null;
+  const perFlat=document.getElementById('tf-per-flat')?.checked||false;
+  const depStages=perFlat?[]:Array.from(document.querySelectorAll('#dep-stage-opts .ms-option.sel')).map(e=>e.dataset.stage);
+  if(existingId){Object.assign(getTrade(existingId),{name,stages,color,depTrade,depStages,perFlat});}
+  else{const order=S.trades.length;S.trades.push({id:'t'+uid(),name,color,stages,depTrade,depStages,perFlat,order});}
+  saveS();closeModal();buildTradeSel();renderCfgTrades();toast('Saved');
+}
+function deleteTrade(id){
+  if(!confirm('Delete trade and all data?'))return;
+  S.trades=S.trades.filter(t=>t.id!==id);
+  Object.keys(S.dates).forEach(k=>{if(k.startsWith(id+'|'))delete S.dates[k];});
+  saveS();buildTradeSel();renderCfgTrades();toast('Deleted');
+}
+
+// JODI CONFIG
+function renderCfgJodi(){
+  const pairs=S.jodiPairs;
+  const pairCards=pairs.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;background:var(--purple-l);border:1px solid #DDD6FE;border-radius:var(--r);margin-bottom:5px">
+      <span>🏠🏠</span><span style="font-weight:600">${p[0]} + ${p[1]}</span>
+      <span style="font-size:11px;color:var(--text2)">Floor ${Math.floor(p[0]/100)}</span>
+      <button class="btn bd" style="padding:1px 6px;font-size:10px;margin-left:auto" onclick="removeJodiPair(${i})">Remove</button>
+    </div>`).join('');
+  document.getElementById('cfg-panel').innerHTML=`
+  <div style="font-size:13px;font-weight:600;margin-bottom:9px">Jodi Pairs (${pairs.length})</div>
+  <div style="background:var(--blue-l);border:1px solid #BFDBFE;border-radius:var(--r);padding:8px 11px;font-size:12px;color:var(--blue-d);margin-bottom:10px">
+    ℹ Jodi flats are tracked independently — both fully editable. Visually tagged only.
+  </div>
+  ${pairCards||'<p style="color:var(--text2);font-size:12px;margin-bottom:10px">No pairs defined.</p>'}
+  <div class="cfg-card" style="margin-top:10px">
+    <div style="font-weight:600;margin-bottom:9px;font-size:13px">Add Jodi pair</div>
+    <div class="f"><label>Floor</label><select id="jodi-fl" onchange="renderJodiGrid(this.value)">${Array.from({length:getFloors()},(_,i)=>`<option value="${i+1}">Floor ${i+1}</option>`).join('')}</select></div>
+    <div id="jodi-grid" style="margin-top:7px"></div>
+    <div style="font-size:11px;color:var(--text2);margin-top:6px" id="jodi-sel-info">Select exactly 2 flats</div>
+    <button class="btn bp" style="margin-top:8px" onclick="addJodiPair()">Add pair</button>
+  </div>`;
+  renderJodiGrid(1);
+}
+let selJodi=[];
+function renderJodiGrid(fl){
+  fl=parseInt(fl);selJodi=[];
+  const g=document.getElementById('jodi-grid');if(!g)return;
+  g.innerHTML=`<div class="flat-sel-grid">${floorFlats(fl).map(fno=>{
+    const j=isJodi(fno);
+    return `<button class="fsq${j?' jodi-p':''}" id="jfsq-${fno}" onclick="toggleJodiSel(${fno})" ${j?'disabled title="Already jodi"':''}>${fno%100||getUnits()}</button>`;
+  }).join('')}</div>`;
+}
+function toggleJodiSel(fno){
+  if(isJodi(fno)){toast('Already in a pair');return;}
+  const i=selJodi.indexOf(fno);
+  if(i>=0){selJodi.splice(i,1);document.getElementById('jfsq-'+fno)?.classList.remove('sel');}
+  else{if(selJodi.length>=2){toast('Select only 2');return;}selJodi.push(fno);document.getElementById('jfsq-'+fno)?.classList.add('sel');}
+  document.getElementById('jodi-sel-info').textContent=`Selected: ${selJodi.join(' + ')||'none'} (need 2)`;
+}
+function addJodiPair(){if(selJodi.length!==2){toast('Select exactly 2');return;}S.jodiPairs.push([...selJodi]);saveS();renderCfgJodi();toast('Pair added');}
+function removeJodiPair(i){if(!confirm('Remove pair?'))return;S.jodiPairs.splice(i,1);saveS();renderCfgJodi();}
+
+// RAW CONFIG
+function renderCfgRaw(){
+  const allStages=[...new Set(S.trades.flatMap(t=>t.stages))];
+  const rs=Array.isArray(S.rawStages)?S.rawStages:[];
+  const stageChecks=allStages.map(s=>`
+    <label style="display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:var(--r);background:${rs.includes(s)?'var(--blue-l)':'var(--bg3)'};margin-bottom:3px;cursor:pointer;border:1px solid ${rs.includes(s)?'#BFDBFE':'var(--border)'}">
+      <input type="checkbox" value="${s}" ${rs.includes(s)?'checked':''} onchange="toggleRawStage('${s.replace(/'/g,"\\'")}',this.checked)" style="width:14px;height:14px">
+      <span style="font-size:12px">${s}</span>
+      ${rs.includes(s)?'<span class="tag t-raw" style="font-size:9px;margin-left:auto">Allowed</span>':'<span style="font-size:10px;color:var(--text3);margin-left:auto">Frozen in RAW</span>'}
+    </label>`).join('');
+  const rawList=S.rawFlats.map(fno=>`<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 7px;background:var(--blue-l);border:1px solid #BFDBFE;border-radius:var(--r);margin:2px">
+    <span style="font-weight:600;font-size:12px">${fno}</span>
+    <button onclick="removeRawFlat(${fno})" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--blue-d)">×</button>
+  </div>`).join('');
+  document.getElementById('cfg-panel').innerHTML=`
+  <div style="font-size:13px;font-weight:600;margin-bottom:4px">RAW Flat Configuration</div>
+  <div style="font-size:12px;color:var(--text2);margin-bottom:11px">RAW flats get only the selected stages. All others are frozen 🏗.</div>
+  <div class="cfg-card">
+    <div style="font-weight:600;margin-bottom:7px;font-size:12px">RAW Flats (${S.rawFlats.length})</div>
+    <div style="margin-bottom:9px">${rawList||'<span style="color:var(--text2);font-size:12px">None defined.</span>'}</div>
+    <div style="display:flex;gap:7px;align-items:flex-end">
+      <div style="flex:1"><label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px">Add flat</label>
+        <input type="number" id="raw-inp" placeholder="e.g. 1601" style="width:100%;padding:7px 9px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px">
+      </div>
+      <button class="btn bp" onclick="addRawFlat()">Add</button>
+    </div>
+  </div>
+  <div style="font-size:13px;font-weight:600;margin:12px 0 4px">Allowed Stages for RAW Flats</div>
+  <div style="font-size:12px;color:var(--text2);margin-bottom:9px">✅ ${rs.length}/${allStages.length} stages allowed</div>
+  <div class="cfg-card">${allStages.length?stageChecks:'<p style="color:var(--text2);font-size:12px">No stages — add trades first.</p>'}</div>`;
+}
+function toggleRawStage(stage,chk){
+  if(!Array.isArray(S.rawStages))S.rawStages=[];
+  if(chk){if(!S.rawStages.includes(stage))S.rawStages.push(stage);}
+  else S.rawStages=S.rawStages.filter(s=>s!==stage);
+  saveS();renderCfgRaw();
+}
+function addRawFlat(){
+  const v=parseInt(document.getElementById('raw-inp').value);
+  if(!v){toast('Enter flat number');return;}
+  if(S.rawFlats.includes(v)){toast('Already in list');return;}
+  S.rawFlats.push(v);saveS();renderCfgRaw();toast('Added');
+}
+function removeRawFlat(fno){S.rawFlats=S.rawFlats.filter(x=>x!==fno);saveS();renderCfgRaw();}
+
+// ═══════════ EXPORT ═══════════
+function exportCSV(){
+  const rows=[['Flat','Floor','Jodi','Status','Trade','Stage','Date','Allowed']];
+  sortedTrades().forEach(t=>{
+    allFlats().forEach(fno=>{
+      if(isRefuge(fno))return;
+      const fl=Math.floor(fno/100);
+      const jp=jodiOf(fno);
+      const status=isFrozen(fno)?'Frozen':isHold(fno)?'Hold':isRaw(fno)?'RAW':'Normal';
+      t.stages.forEach(s=>{
+        const a=stageAllowed(t.id,fno,s);
+        const d=getD(t.id,fno,s);
+        rows.push([fno,fl,jp?`Yes+${jp}`:'',status,t.name,s,a?(d||'Pending'):'N/A',a?'Yes':'No']);
+      });
+    });
+  });
+  const csv=rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='Daffodil_Export.csv';a.click();
+  toast('Exported');
+}
+
+// ═══════════ NOTIFICATIONS ═══════════
+function toggleNotif(){document.getElementById('np').classList.toggle('open');if(document.getElementById('np').classList.contains('open')){renderNPanel();}}
+function renderNPanel(){
+  document.getElementById('np-list').innerHTML=myNotifs().slice(0,25).map(n=>`
+    <div class="np-item${!n.read.includes(ME?.mobile)?' unread':''}" onclick="readNotif('${n.id}')">
+      <div>${n.msg}</div><div class="np-time">${fmt(n.createdAt)}</div>
+    </div>`).join('')||'<div style="padding:12px 14px;font-size:12px;color:var(--text2)">No notifications</div>';
+}
+function readNotif(id){const n=S.notifications.find(x=>x.id===id);if(n&&ME&&!n.read.includes(ME.mobile)){n.read.push(ME.mobile);saveS();updateNBadge();renderNPanel();}}
+function markAllRead(){myNotifs().forEach(n=>{if(ME&&!n.read.includes(ME.mobile))n.read.push(ME.mobile);});saveS();updateNBadge();renderNPanel();}
+
+// ═══════════ MODAL / TOAST ═══════════
+function showModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal-bg').classList.add('open');}
+function closeModal(){document.getElementById('modal-bg').classList.remove('open');}
+let _tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(_tt);_tt=setTimeout(()=>t.style.display='none',2400);}
+
+function toggleMobMenu(){
+  document.getElementById('sidebar').classList.toggle('mob-open');
+  document.getElementById('mob-overlay').classList.toggle('open');
+}
+
+// ═══════════ BOOT ═══════════
+loadS();
+(()=>{
+  const params=new URLSearchParams(location.search);
+  const linkId=params.get('link');
+  if(linkId){const lnk=S.links.find(l=>l.id===linkId);if(lnk)document.querySelector('#s-login .card h2').textContent=`Join as ${RL[lnk.role]||'Team Member'}`;}
+})();
+</script>
+</body>
+</html>
