@@ -276,7 +276,30 @@ input[type=date]:disabled{opacity:0.45;cursor:not-allowed}
 </div>
 <div id="toast"></div>
 
-<script>
+<script type="module">
+// ═══════════ FIREBASE SETUP ═══════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD16hM_iwXlAn_O0vFIxUqbeu_ByHFS4MY",
+  authDomain: "mahavir-spring---daffodil.firebaseapp.com",
+  databaseURL: "https://mahavir-spring---daffodil-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "mahavir-spring---daffodil",
+  storageBucket: "mahavir-spring---daffodil.firebasestorage.app",
+  messagingSenderId: "101711831963",
+  appId: "1:101711831963:web:5cfe585be1b0745ac0f73e"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+const ROOT = 'daffodil_v1';
+
+// Show loading overlay
+function showLoader(msg){
+  document.getElementById('fb-loader').style.display='flex';
+  document.getElementById('fb-loader-msg').textContent=msg||'Loading…';
+}
+function hideLoader(){document.getElementById('fb-loader').style.display='none';}
 // ═══════════ DEFAULTS ═══════════
 const TCOLORS=['#2563EB','#059669','#D97706','#7C3AED','#EA580C','#0891B2','#65A30D','#DB2777'];
 const ROLES=['admin','manager','supervisor','contractor'];
@@ -315,8 +338,7 @@ let S={
 };
 let ME=null,curPage='progress',curTrade='civil',curFG=0;
 
-function loadS(){
-  try{const r=localStorage.getItem('daff_v6');if(r)S=JSON.parse(r);}catch(e){}
+function initS(){
   if(!S.bldg)S.bldg={floors:50,unitsPerFloor:10,groupSize:5};
   if(!S.trades?.length)S.trades=[{id:'civil',name:'Civil Work',color:'#2563EB',stages:['DPC Work','Int Block Work','Int. Plaster','POP Dhahda','Main Door Fix','Bed Room Fix','Electric Pipe','POP Finish','Fire Fighting'],depTrade:null,depStages:[],perFlat:false,order:0}];
   S.trades.forEach((t,i)=>{if(!t.depStages)t.depStages=t.depStage?[t.depStage]:[];if(t.order===undefined)t.order=i;});
@@ -325,10 +347,54 @@ function loadS(){
   ['jodiPairs','rawFlats','rawStages','frozenFlats','notifications','links','activityLog'].forEach(k=>{if(!Array.isArray(S[k]))S[k]=[];});
   if(!Object.values(S.users).some(u=>u.role==='admin'))
     S.users['9999999999']={name:'Admin',mobile:'9999999999',role:'admin',trades:[],status:'approved',joinedAt:Date.now()};
-  // Pre-populate slab entries from Excel data if empty
   if(!S.slab.entries.length) seedSlabEntries();
 }
-function saveS(){try{localStorage.setItem('daff_v6',JSON.stringify(S));}catch(e){toast('Storage full!');}}
+
+// Save entire state to Firebase
+function saveS(){
+  set(ref(db, ROOT), S).catch(e=>toast('Save error: '+e.message));
+}
+
+// Save only a specific path (faster for single field updates)
+function savePath(path, value){
+  set(ref(db, ROOT+'/'+path), value).catch(e=>toast('Save error: '+e.message));
+}
+
+// Load from Firebase once, then listen for real-time updates
+function loadS(callback){
+  showLoader('Connecting to database…');
+  const dbRef = ref(db, ROOT);
+  // One-time load first
+  get(dbRef).then(snapshot=>{
+    if(snapshot.exists()){
+      S = snapshot.val();
+    }
+    initS();
+    hideLoader();
+    callback();
+    // Then subscribe to real-time updates
+    onValue(dbRef, snap=>{
+      if(snap.exists()){
+        const fresh = snap.val();
+        // Only update if not currently editing (avoid cursor jumps)
+        S = fresh;
+        initS();
+        if(ME){
+          // Refresh current view silently
+          renderSidebar();
+          renderContent();
+          updateNBadge();
+        }
+      }
+    });
+  }).catch(e=>{
+    hideLoader();
+    toast('Connection failed: '+e.message);
+    // Fallback to empty state
+    initS();
+    callback();
+  });
+}
 
 function seedSlabEntries(){
   const raw=[
@@ -1591,13 +1657,39 @@ function toggleMobMenu(){
   document.getElementById('mob-overlay').classList.toggle('open');
 }
 
+// ═══════════ EXPOSE GLOBALS (required for module scripts) ═══════════
+Object.assign(window,{
+  joinViaLink,loginAs,logout,setPage,onTradeChange,toggleNotif,markAllRead,
+  readNotif,exportCSV,toggleMobMenu,closeModal,
+  setD,manageFlatModal,flatStateChangePopup,confirmFlatStateChange,
+  saveHoldPrompt,confirmSaveHold,openSnagModal,addSnag,resolveSnag,
+  demoLogin:()=>{},
+  renderConfig,renderCfgBldg,saveBldgConfig,renderCfgTrades,renderCfgJodi,
+  renderCfgRaw,editTradeModal,saveTrade,deleteTrade,moveTrade,dragStart,dragOver,dropTrade,
+  onDepTradeChange,updateDepSel,toggleJodiSel,addJodiPair,removeJodiPair,
+  toggleRawStage,addRawFlat,removeRawFlat,
+  addUserModal,saveNewUser,editUserModal,saveEditUser,approveUserModal,
+  confirmApprove,rejectUser,deleteUser,
+  createLinkModal,saveLink,copyLink,deleteLink,
+  renderSlab,updateSlabPart,addSlabRow,addSlabPart,removeSlabPart,
+  addCustomDate,removeCustomDate,exportSlabCSV,
+});
+
 // ═══════════ BOOT ═══════════
-loadS();
-(()=>{
+loadS(()=>{
   const params=new URLSearchParams(location.search);
   const linkId=params.get('link');
-  if(linkId){const lnk=S.links.find(l=>l.id===linkId);if(lnk)document.querySelector('#s-login .card h2').textContent=`Join as ${RL[lnk.role]||'Team Member'}`;}
-})();
+  if(linkId){const lnk=S.links.find(l=>l.id===linkId);if(lnk){const h=document.querySelector('#s-login .card h2');if(h)h.textContent=`Join as ${RL[lnk.role]||'Team Member'}`;}}
+});
 </script>
+<div id="fb-loader" style="position:fixed;inset:0;background:rgba(245,244,241,0.95);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+  <div style="font-size:32px">🔥</div>
+  <div style="font-size:15px;font-weight:700;color:#1C1B18">Mahavir Spring — Daffodil</div>
+  <div id="fb-loader-msg" style="font-size:13px;color:#6A6860">Connecting…</div>
+  <div style="width:180px;height:4px;background:#E2E0DA;border-radius:2px;overflow:hidden">
+    <div style="height:100%;background:#2563EB;border-radius:2px;animation:fbload 1.5s ease-in-out infinite"></div>
+  </div>
+</div>
+<style>@keyframes fbload{0%{width:0%}50%{width:70%}100%{width:100%}}</style>
 </body>
 </html>
