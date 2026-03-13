@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daffodil Construction Tracker</title>
+<title>Mahavir Spring — Daffodil</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -221,21 +221,16 @@ input[type=date]:disabled{opacity:0.45;cursor:not-allowed}
 <!-- LOGIN -->
 <div id="s-login" class="screen active">
   <div class="brand">
-    <h1>Daffodil <span>Tracker</span></h1>
-    <p>Construction Progress — Daffodil 1</p>
+    <h1>Mahavir Spring</h1>
+    <p style="font-size:14px;color:var(--text2);margin-top:4px">Daffodil — Construction Tracker</p>
   </div>
   <div class="card">
-    <h2>Quick Access (Demo)</h2>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px">
-      <button class="btn bp" onclick="demoLogin('admin')">👑 Admin</button>
-      <button class="btn" style="background:#059669;color:#fff;border-color:#059669" onclick="demoLogin('manager')">🏗 Site Manager</button>
-      <button class="btn" style="background:#7C3AED;color:#fff;border-color:#7C3AED" onclick="demoLogin('supervisor')">👷 Supervisor</button>
-      <button class="btn" style="background:#EA580C;color:#fff;border-color:#EA580C" onclick="demoLogin('contractor')">🔧 Contractor</button>
-    </div>
-    <div style="text-align:center;font-size:11px;color:var(--text3);margin-bottom:12px">— or join via invite link —</div>
-    <div class="f"><label>Full Name *</label><input type="text" id="inp-name" placeholder="Your full name"></div>
-    <div class="f"><label>Mobile Number *</label><input type="tel" id="inp-mobile" placeholder="10-digit mobile" maxlength="15"></div>
-    <button class="btn bp bfull" onclick="joinViaLink()">Join →</button>
+    <h2 style="margin-bottom:4px">Sign In</h2>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Enter your name and mobile number to continue.</p>
+    <div class="f"><label>Full Name *</label><input type="text" id="inp-name" placeholder="Your full name" autocomplete="name"></div>
+    <div class="f"><label>Mobile Number *</label><input type="tel" id="inp-mobile" placeholder="10-digit mobile number" maxlength="15" autocomplete="tel"></div>
+    <button class="btn bp bfull" onclick="joinViaLink()">Continue →</button>
+    <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px">Access is by invite only. Contact your admin if you need access.</p>
   </div>
 </div>
 
@@ -255,7 +250,7 @@ input[type=date]:disabled{opacity:0.45;cursor:not-allowed}
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
       <button id="mob-menu-btn" onclick="toggleMobMenu()" style="display:none;background:none;border:none;font-size:20px;cursor:pointer;padding:2px 4px;flex-shrink:0">☰</button>
-      <div class="logo">Daffodil <span>Tracker</span></div>
+      <div class="logo">Mahavir <span>Daffodil</span></div>
       <div class="tnav" id="tnav"></div>
     </div>
     <div class="topright">
@@ -464,34 +459,46 @@ function flatProgress(tid,fno){
 }
 
 // ═══════════ LOGIN ═══════════
-function demoLogin(role){
-  const mob={admin:'9999999999',manager:'8888888888',supervisor:'7777777777',contractor:'6666666666'}[role];
-  const name={admin:'Demo Admin',manager:'Demo Manager',supervisor:'Demo Supervisor',contractor:'Demo Contractor'}[role];
-  if(!S.users[mob])S.users[mob]={name,mobile:mob,role,trades:S.trades.map(t=>t.id),status:'approved',joinedAt:Date.now()};
-  else{S.users[mob].status='approved';S.users[mob].role=role;if(!S.users[mob].trades?.length)S.users[mob].trades=S.trades.map(t=>t.id);}
-  saveS();loginAs(S.users[mob]);
-}
 function joinViaLink(){
   const name=document.getElementById('inp-name').value.trim();
   const mob=document.getElementById('inp-mobile').value.replace(/\D/g,'');
-  if(!name){toast('Enter your name');return;}
-  if(mob.length<10){toast('Enter valid mobile number');return;}
+  if(!name){toast('Enter your full name');return;}
+  if(mob.length<10){toast('Enter a valid 10-digit mobile number');return;}
+
   const params=new URLSearchParams(location.search);
   const linkId=params.get('link');
   const lnk=linkId?S.links.find(l=>l.id===linkId):null;
-  if(!lnk&&!S.users[mob]){toast('No valid invite link. Contact admin.');return;}
-  if(!S.users[mob]){
-    const role=lnk?.role||'supervisor';
-    const trades=lnk?.tradeId?[lnk.tradeId]:[];
-    S.users[mob]={name,mobile:mob,role,trades,status:'pending',joinedAt:Date.now()};
-    saveS();
-    Object.values(S.users).filter(u=>u.role==='admin').forEach(a=>addNotif(a.mobile,`New user ${name} (${mob}) requesting access.`,'user_req'));
-    ME=S.users[mob];show('s-pending');document.getElementById('pending-info').textContent=`${name} · ${mob}`;
-  }else{
+  const isAdmin=mob==='9999999999';
+
+  // Existing user — just log in
+  if(S.users[mob]){
     const u=S.users[mob];
-    if(u.status==='rejected'){toast('Access denied. Contact admin.');return;}
+    // Update name if changed
+    if(u.name!==name){u.name=name;saveS();}
+    if(u.status==='rejected'){toast('Access denied. Contact your admin.');return;}
     if(u.status==='pending'){ME=u;show('s-pending');document.getElementById('pending-info').textContent=`${u.name} · ${mob}`;return;}
     loginAs(u);
+    return;
+  }
+
+  // New user — must have invite link or be admin
+  if(!lnk&&!isAdmin){
+    toast('Access is by invite only. Contact your admin for a link.');
+    return;
+  }
+
+  const role=isAdmin?'admin':(lnk?.role||'supervisor');
+  const trades=lnk?.tradeId?[lnk.tradeId]:[];
+  S.users[mob]={name,mobile:mob,role,trades,status:isAdmin?'approved':'pending',joinedAt:Date.now()};
+  saveS();
+  if(!isAdmin){
+    Object.values(S.users).filter(u=>u.role==='admin').forEach(a=>
+      addNotif(a.mobile,`New user ${name} (${mob}) is requesting access.`,'user_req'));
+    ME=S.users[mob];
+    show('s-pending');
+    document.getElementById('pending-info').textContent=`${name} · ${mob}`;
+  } else {
+    loginAs(S.users[mob]);
   }
 }
 function loginAs(u){ME=u;if(ME.trades?.length)curTrade=ME.trades[0];else if(S.trades.length)curTrade=S.trades[0].id;show('s-app');initApp();}
